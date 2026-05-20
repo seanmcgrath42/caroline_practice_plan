@@ -227,12 +227,13 @@ main {
 }
 .fretboard .fret-cell {
   border-right: 1px solid #555;
-  background: linear-gradient(180deg, transparent 46%, #777 46%, #777 54%, transparent 54%);
+  background: linear-gradient(180deg, transparent 46%, #999 46%, #999 54%, transparent 54%);
   position: relative;
 }
-.fretboard .fret-cell:nth-child(3) { background:
-  linear-gradient(180deg, transparent 46%, #777 46%, #777 54%, transparent 54%);
-}
+tr[data-string="0"] .fret-cell { background: linear-gradient(180deg, transparent 40%, #aaa 40%, #aaa 60%, transparent 60%); }
+tr[data-string="1"] .fret-cell { background: linear-gradient(180deg, transparent 43%, #999 43%, #999 57%, transparent 57%); }
+tr[data-string="2"] .fret-cell { background: linear-gradient(180deg, transparent 45.5%, #888 45.5%, #888 54.5%, transparent 54.5%); }
+tr[data-string="3"] .fret-cell { background: linear-gradient(180deg, transparent 47.5%, #777 47.5%, #777 52.5%, transparent 52.5%); }
 .fret-dot {
   position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
   width: 24px; height: 24px; border-radius: 50%;
@@ -451,9 +452,9 @@ function fretboard(startFret, endFret, notes, title) {
 
   // Strings (G at top, E at bottom)
   for (let si = 3; si >= 0; si--) {
-    html += '<tr><td class="str-label">' + STRING_NAMES[si] + '</td>';
+    let openNote = startFret === 0 ? notes.find(n => n.s === si && n.f === 0) : null;
+    html += '<tr data-string="' + si + '"><td class="str-label">' + (openNote ? '' : STRING_NAMES[si]) + '</td>';
     if (startFret === 0) {
-      let openNote = notes.find(n => n.s === si && n.f === 0);
       html += '<td class="nut" style="position:relative">';
       if (openNote) {
         let cls = openNote.c || 'root';
