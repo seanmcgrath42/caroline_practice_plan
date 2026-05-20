@@ -489,7 +489,7 @@ const SONGS = [
     structure:[{name:"Intro",prog:["G","C","G","C","G","C","G","C"]},{name:"Verse",prog:["G","C","G","C","G","C","G","C","G","C","G","C","G","C","G","C"]},{name:"Chorus",prog:["G","C","G","C","G","C","G","C"]}]},
   { id:2, title:"Please Come Home", url:"https://seanmcgrathmusic.com/songs/please-come-home/", mp3:"1Kflw2QX6h8iNFj_KRTSv7eOoQLinxQAo", origKey:"C", capo:0, guitarChords:["C","F","G"],
     bassNotes:["C","F","G"], positions:[{n:"C",s:1,f:3},{n:"F",s:0,f:1},{n:"G",s:0,f:3}],
-    structure:[{name:"Verse",prog:["C","F","C","F","G","F","G","F"]},{name:"Chorus",prog:["C","F","C","F"]}]},
+    structure:[{name:"Intro",prog:["C","F","C","F"]},{name:"Verse",prog:["C","F","C","F","G","F","G","F"]},{name:"Chorus",prog:["C","F","C","F"]}]},
   { id:3, title:"I Feel It All", url:"https://seanmcgrathmusic.com/songs/i-feel-it-all/", mp3:"1HJoPtci52FpmiKTo79wiTCRaArX9wiYP", origKey:"G", capo:0, guitarChords:["G","C","D"],
     bassNotes:["G","C","D"], positions:[{n:"G",s:0,f:3},{n:"C",s:1,f:3},{n:"D",s:2,f:0}],
     structure:[{name:"Verse",prog:["G","C","G","C","G","C","G","C"]},{name:"Bridge",prog:["D","C","D","C","D","C"]},{name:"Chorus",prog:["G","C","G","C"]}]},
@@ -634,7 +634,7 @@ function songIntro(day, song, extras) {
   overviewHtml += '</dl>';
   if (song.mp3) {
     overviewHtml += '<div class="song-player"><iframe class="gdrive-player" src="https://drive.google.com/file/d/' + song.mp3 + '/preview" allow="autoplay" loading="lazy"></iframe><div class="song-player-links">';
-    if (song.url) overviewHtml += '<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; ' + song.title + ' on seanmcgrathmusic.com</a>';
+    if (song.url) overviewHtml += '<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; Full chord sheet for ' + song.title + ' on seanmcgrathmusic.com</a>';
     overviewHtml += '<a class="song-dl-btn" href="https://drive.google.com/uc?export=download&id=' + song.mp3 + '" target="_blank" rel="noopener">&#8681; Download MP3</a>';
     overviewHtml += '</div></div>';
   } else if (song.url) {
@@ -694,7 +694,7 @@ function songPractice(day, song, extras) {
   sections.push({type:'fretboard', title:'Quick Reference: ' + song.title, startFret:0, endFret:maxFret, notes:fbNotes});
   if (song.mp3) {
     let playerHtml = '<div class="song-player"><iframe class="gdrive-player" src="https://drive.google.com/file/d/' + song.mp3 + '/preview" allow="autoplay" loading="lazy"></iframe><div class="song-player-links">';
-    if (song.url) playerHtml += '<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; ' + song.title + ' on seanmcgrathmusic.com</a>';
+    if (song.url) playerHtml += '<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; Full chord sheet for ' + song.title + ' on seanmcgrathmusic.com</a>';
     playerHtml += '<a class="song-dl-btn" href="https://drive.google.com/uc?export=download&id=' + song.mp3 + '" target="_blank" rel="noopener">&#8681; Download MP3</a>';
     playerHtml += '</div></div>';
     sections.push({type:'html', title:'', body: playerHtml});
@@ -717,7 +717,7 @@ function songPractice(day, song, extras) {
 
   // Tips
   sections.push({type:'exercise', title:'Practice Goals (15 minutes)',
-    body:'<ol><li><strong>Slow run:</strong> Play the whole song at half speed. Focus on hitting the right notes.</li><li><strong>Timing run:</strong> Play at a comfortable speed, counting "1, 2, 3, 4" out loud.</li><li><strong>Performance run:</strong> Play the song start to finish without stopping, even if you make mistakes. Keep going!</li></ol>'});
+    body:'<ol><li><strong>Slow run:</strong> Play the whole song at half speed. Focus on hitting the right notes. <em>Tip: download the MP3 using the link above and use a <a href="https://www.google.com/search?q=slow+downer+app+for+music+practice" target="_blank" rel="noopener">slow downer app</a> on your device to play the track at half speed while you practise along.</em></li><li><strong>Timing run:</strong> Play at a comfortable speed, counting "1, 2, 3, 4" out loud.</li><li><strong>Performance run:</strong> Play the song start to finish without stopping, even if you make mistakes. Keep going!</li></ol>'});
   sections.push({type:'tip', body:"If you're struggling with a transition between two notes, isolate just that change and repeat it 10 times slowly before speeding up."});
 
   if (extras) sections.push(...extras);
