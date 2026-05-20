@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Caroline's Bass Practice Plan</title>
+<style>
+:root {
+  --bg: #1a1a2e;
+  --bg2: #16213e;
+  --bg3: #0f3460;
+  --accent: #e94560;
+  --accent2: #533483;
+  --text: #eee;
+  --text2: #aab;
+  --green: #2ecc71;
+  --yellow: #f39c12;
+  --blue: #3498db;
+  --card: #1e2a4a;
+  --border: #2a3a5a;
+  --root-color: #e94560;
+  --note-color: #3498db;
+  --oct-color: #2ecc71;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+#auth-screen {
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh; padding: 2rem;
+}
+.auth-box {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; padding: 3rem; max-width: 400px; width: 100%; text-align: center;
+}
+.auth-box h1 { font-size: 1.8rem; margin-bottom: .5rem; }
+.auth-box .subtitle { color: var(--text2); margin-bottom: 2rem; }
+.auth-box input {
+  width: 100%; padding: .8rem 1rem; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--bg);
+  color: var(--text); font-size: 1rem; margin-bottom: 1rem;
+}
+.auth-box button {
+  width: 100%; padding: .8rem; border-radius: 8px; border: none;
+  background: var(--accent); color: #fff; font-size: 1rem;
+  cursor: pointer; font-weight: 600;
+}
+.auth-box button:hover { opacity: .9; }
+.auth-error { color: var(--accent); margin-top: .5rem; display: none; }
+#app { display: none; }
+nav {
+  position: fixed; top: 0; left: 0; width: 260px; height: 100vh;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  overflow-y: auto; z-index: 100; transition: transform .3s;
+  padding-bottom: 2rem;
+}
+nav.closed { transform: translateX(-260px); }
+.nav-header {
+  padding: 1.2rem; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-header h2 { font-size: 1rem; }
+.nav-close { background: none; border: none; color: var(--text2); cursor: pointer; font-size: 1.3rem; display: none; }
+.nav-section { padding: .5rem 0; }
+.nav-section-title {
+  padding: .4rem 1.2rem; color: var(--accent); font-weight: 700;
+  font-size: .75rem; text-transform: uppercase; letter-spacing: .05em;
+}
+.nav-item {
+  display: flex; align-items: center; gap: .5rem;
+  padding: .4rem 1.2rem; cursor: pointer; font-size: .85rem;
+  color: var(--text2); text-decoration: none; transition: background .2s;
+}
+.nav-item:hover, .nav-item.active { background: var(--bg3); color: var(--text); }
+.nav-item .status {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.nav-item .status.finished { background: var(--green); }
+.nav-item .status.in-progress { background: var(--yellow); }
+.nav-item .status.not-started { background: var(--border); }
+main {
+  margin-left: 260px; padding: 2rem; min-height: 100vh;
+  max-width: 900px;
+}
+.hamburger {
+  display: none; position: fixed; top: 1rem; left: 1rem;
+  z-index: 200; background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: .5rem .7rem; cursor: pointer;
+  color: var(--text); font-size: 1.2rem;
+}
+@media (max-width: 768px) {
+  nav { transform: translateX(-260px); }
+  nav.open { transform: translateX(0); }
+  .nav-close { display: block; }
+  main { margin-left: 0; padding: 1rem; }
+  .hamburger { display: block; }
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.5); z-index: 99; }
+  .overlay.show { display: block; }
+}
+/* Dashboard */
+.dashboard-header { margin-bottom: 2rem; }
+.dashboard-header h1 { font-size: 2rem; margin-bottom: .5rem; }
+.stats-row {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem; margin-bottom: 2rem;
+}
+.stat-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.2rem; text-align: center;
+}
+.stat-card .num { font-size: 2rem; font-weight: 700; }
+.stat-card .label { color: var(--text2); font-size: .85rem; }
+.stat-card .num.green { color: var(--green); }
+.stat-card .num.yellow { color: var(--yellow); }
+.stat-card .num.blue { color: var(--blue); }
+.progress-bar-container {
+  background: var(--bg); border-radius: 8px; height: 12px;
+  margin-bottom: 2rem; overflow: hidden;
+}
+.progress-bar-fill {
+  height: 100%; border-radius: 8px; background: linear-gradient(90deg, var(--accent), var(--accent2));
+  transition: width .5s;
+}
+.phase-section { margin-bottom: 2rem; }
+.phase-title {
+  font-size: 1.1rem; font-weight: 700; margin-bottom: .8rem;
+  color: var(--accent); display: flex; align-items: center; gap: .5rem;
+}
+.day-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: .5rem;
+}
+.day-card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: .7rem; cursor: pointer;
+  transition: all .2s; font-size: .8rem;
+}
+.day-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+.day-card .day-num { font-weight: 700; margin-bottom: .2rem; }
+.day-card .day-title { color: var(--text2); font-size: .75rem; line-height: 1.3; }
+.day-card.finished { border-left: 3px solid var(--green); }
+.day-card.in-progress { border-left: 3px solid var(--yellow); }
+.day-card.test { background: var(--bg3); }
+/* Lesson */
+.lesson-header {
+  margin-bottom: 2rem; padding-bottom: 1rem;
+  border-bottom: 1px solid var(--border);
+}
+.lesson-phase { color: var(--accent); font-size: .85rem; font-weight: 600; text-transform: uppercase; }
+.lesson-title { font-size: 1.8rem; margin: .3rem 0; }
+.lesson-objectives {
+  background: var(--card); border-radius: 8px; padding: 1rem 1.2rem;
+  margin-bottom: 1.5rem; border-left: 3px solid var(--blue);
+}
+.lesson-objectives h3 { font-size: .9rem; color: var(--blue); margin-bottom: .5rem; }
+.lesson-objectives li { margin-left: 1.2rem; font-size: .9rem; color: var(--text2); }
+.lesson-section { margin-bottom: 2rem; }
+.lesson-section h3 {
+  font-size: 1.1rem; margin-bottom: .8rem;
+  padding-bottom: .3rem; border-bottom: 1px solid var(--border);
+}
+.lesson-section p, .lesson-section li { font-size: .95rem; margin-bottom: .5rem; }
+.lesson-section ul, .lesson-section ol { margin-left: 1.5rem; }
+.exercise-box {
+  background: var(--bg3); border-radius: 8px; padding: 1.2rem;
+  border-left: 3px solid var(--green); margin: 1rem 0;
+}
+.exercise-box h4 { color: var(--green); margin-bottom: .5rem; }
+.tip-box {
+  background: #2a2040; border-radius: 8px; padding: 1rem 1.2rem;
+  border-left: 3px solid var(--yellow); margin: 1rem 0;
+}
+.tip-box::before { content: "Tip: "; font-weight: 700; color: var(--yellow); }
+.info-box {
+  background: var(--card); border-radius: 8px; padding: 1rem 1.2rem;
+  border-left: 3px solid var(--blue); margin: 1rem 0;
+}
+.capo-box {
+  background: #1a2a1a; border-radius: 8px; padding: 1rem 1.2rem;
+  border-left: 3px solid var(--green); margin: 1rem 0;
+}
+.capo-box h4 { color: var(--green); margin-bottom: .5rem; }
+.song-meta {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: .5rem; background: var(--card); border-radius: 8px;
+  padding: 1rem; margin: 1rem 0; font-size: .9rem;
+}
+.song-meta dt { color: var(--text2); }
+.song-meta dd { font-weight: 600; }
+.chord-map {
+  background: var(--card); border-radius: 8px; padding: 1rem;
+  margin: 1rem 0; overflow-x: auto;
+}
+.chord-map table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+.chord-map th { color: var(--accent); text-align: left; padding: .4rem .8rem; border-bottom: 1px solid var(--border); }
+.chord-map td { padding: .4rem .8rem; border-bottom: 1px solid var(--border); }
+.section-flow {
+  background: var(--card); border-radius: 8px; padding: 1rem; margin: 1rem 0;
+}
+.section-flow h4 { margin-bottom: .5rem; color: var(--text2); }
+.chord-sequence {
+  display: flex; flex-wrap: wrap; gap: .4rem; margin: .5rem 0;
+}
+.chord-badge {
+  background: var(--bg3); border-radius: 6px; padding: .3rem .6rem;
+  font-family: 'Courier New', monospace; font-weight: 700; font-size: .9rem;
+}
+.chord-badge.highlight { background: var(--accent); color: #fff; }
+/* Fretboard */
+.fretboard-container { margin: 1.2rem 0; overflow-x: auto; }
+.fretboard-title { font-size: .9rem; font-weight: 600; margin-bottom: .5rem; color: var(--text2); }
+.fretboard {
+  display: inline-block; border-collapse: collapse; font-size: .8rem;
+}
+.fretboard td {
+  width: 56px; height: 28px; text-align: center;
+  position: relative; padding: 0;
+}
+.fretboard .str-label {
+  width: 28px; font-weight: 700; color: var(--text2);
+  text-align: right; padding-right: 4px;
+}
+.fretboard .fret-num {
+  color: var(--text2); font-size: .7rem; height: 20px;
+}
+.fretboard .nut {
+  width: 6px; background: #888; border: none;
+}
+.fretboard .fret-cell {
+  border-right: 1px solid #555;
+  background: linear-gradient(180deg, transparent 46%, #777 46%, #777 54%, transparent 54%);
+  position: relative;
+}
+.fretboard .fret-cell:nth-child(3) { background:
+  linear-gradient(180deg, transparent 46%, #777 46%, #777 54%, transparent 54%);
+}
+.fret-dot {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .7rem; z-index: 2; color: #fff;
+}
+.fret-dot.root { background: var(--root-color); }
+.fret-dot.note { background: var(--note-color); }
+.fret-dot.oct { background: var(--oct-color); }
+.fret-dot.open {
+  position: absolute; top: 50%; left: -2px; transform: translate(-50%, -50%);
+  border: 2px solid var(--root-color); background: transparent;
+  color: var(--root-color);
+}
+.fret-dot.open.note-style { border-color: var(--note-color); color: var(--note-color); }
+.fret-marker {
+  position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px; border-radius: 50%; background: #444;
+}
+/* Test */
+.test-container { margin: 1.5rem 0; }
+.test-q {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 8px; padding: 1.2rem; margin-bottom: 1rem;
+}
+.test-q h4 { margin-bottom: .8rem; }
+.test-q .options { display: flex; flex-direction: column; gap: .4rem; }
+.test-q .opt-btn {
+  padding: .6rem 1rem; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--bg); color: var(--text); cursor: pointer; text-align: left;
+  font-size: .9rem; transition: all .2s;
+}
+.test-q .opt-btn:hover { border-color: var(--accent); }
+.test-q .opt-btn.correct { background: #1a3a1a; border-color: var(--green); }
+.test-q .opt-btn.wrong { background: #3a1a1a; border-color: var(--accent); }
+.test-q .opt-btn.disabled { pointer-events: none; opacity: .7; }
+.test-result {
+  margin-top: .5rem; padding: .5rem; border-radius: 6px;
+  font-size: .9rem; display: none;
+}
+.test-result.show { display: block; }
+.test-score {
+  background: var(--card); border-radius: 8px; padding: 1.2rem;
+  text-align: center; margin-top: 1rem;
+}
+.test-score .score-num { font-size: 2rem; font-weight: 700; }
+/* Status controls */
+.lesson-controls {
+  display: flex; gap: .8rem; margin: 2rem 0 1rem;
+  padding-top: 1rem; border-top: 1px solid var(--border);
+}
+.status-btn {
+  padding: .7rem 1.5rem; border-radius: 8px; border: 2px solid;
+  cursor: pointer; font-weight: 600; font-size: .9rem; transition: all .2s;
+  background: transparent;
+}
+.status-btn.finish { border-color: var(--green); color: var(--green); }
+.status-btn.finish:hover, .status-btn.finish.active { background: var(--green); color: #fff; }
+.status-btn.progress { border-color: var(--yellow); color: var(--yellow); }
+.status-btn.progress:hover, .status-btn.progress.active { background: var(--yellow); color: #000; }
+.lesson-nav {
+  display: flex; justify-content: space-between; margin-top: 1rem;
+}
+.lesson-nav a {
+  color: var(--accent); text-decoration: none; font-size: .9rem;
+  display: flex; align-items: center; gap: .3rem;
+}
+.lesson-nav a:hover { text-decoration: underline; }
+/* Glossary */
+.glossary-list { }
+.glossary-item {
+  background: var(--card); border-radius: 8px; padding: 1rem 1.2rem;
+  margin-bottom: .5rem; border-left: 3px solid var(--accent2);
+}
+.glossary-item dt { font-weight: 700; color: var(--accent); margin-bottom: .2rem; }
+.glossary-item dd { color: var(--text2); font-size: .9rem; }
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.lesson-section table { border-collapse: collapse; margin: .5rem 0; width: 100%; }
+.lesson-section th, .lesson-section td { padding: .4rem .8rem; border: 1px solid var(--border); font-size: .9rem; }
+.lesson-section th { background: var(--bg3); text-align: left; }
+.stop-badge { display: inline-block; background: var(--accent); color: #fff; padding: .1rem .5rem; border-radius: 4px; font-size: .75rem; font-weight: 700; }
+/* Hand selector */
+.hand-selector {
+  display: flex; align-items: center; gap: 0;
+  padding: .6rem 1.2rem; font-size: .8rem;
+}
+.hand-selector .hand-label { color: var(--text2); margin-right: .5rem; font-size: .75rem; }
+.hand-btn-group {
+  display: flex; border-radius: 6px; overflow: hidden;
+  border: 1px solid var(--border);
+}
+.hand-btn {
+  padding: .35rem .7rem; border: none; cursor: pointer;
+  font-size: .78rem; font-weight: 600; transition: all .2s;
+  background: var(--bg); color: var(--text2);
+}
+.hand-btn:first-child { border-right: 1px solid var(--border); }
+.hand-btn.active { background: var(--accent); color: #fff; }
+.hand-btn:hover:not(.active) { background: var(--bg3); }
+/* Lefty fretboard */
+.fretboard.lefty { direction: rtl; }
+.fretboard.lefty td { direction: ltr; }
+.fretboard.lefty .str-label { text-align: left; padding-left: 4px; padding-right: 0; }
+.fretboard.lefty .fret-cell { border-right: none; border-left: 1px solid #555; }
+.fretboard.lefty .fret-dot.open { left: auto; right: -2px; transform: translate(50%, -50%); }
+/* Song link */
+.song-link {
+  display: inline-flex; align-items: center; gap: .4rem;
+  color: var(--accent); text-decoration: none; font-weight: 600;
+  padding: .4rem .8rem; border: 1px solid var(--accent);
+  border-radius: 6px; font-size: .85rem; transition: all .2s; margin: .5rem 0;
+}
+.song-link:hover { background: var(--accent); color: #fff; }
+.song-player { background: var(--card); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin: .5rem 0; }
+.gdrive-player { width: 100%; height: 60px; border: none; border-radius: 4px; margin-bottom: .6rem; }
+.song-player-links { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.song-dl-btn {
+  display: inline-flex; align-items: center; gap: .3rem;
+  color: var(--text); text-decoration: none; font-size: .8rem;
+  padding: .3rem .7rem; border: 1px solid var(--border);
+  border-radius: 5px; transition: all .2s;
+}
+.song-dl-btn:hover { border-color: var(--accent); color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div id="auth-screen">
+  <div class="auth-box">
+    <h1>&#127928; Bass Camp</h1>
+    <p class="subtitle">Caroline's Practice Plan</p>
+    <input type="password" id="pw-input" placeholder="Enter password" autofocus>
+    <button onclick="checkAuth()">Enter</button>
+    <p class="auth-error" id="auth-err">Incorrect password. Try again.</p>
+  </div>
+</div>
+
+<button class="hamburger" id="hamburger" onclick="toggleNav()">&#9776;</button>
+<div class="overlay" id="overlay" onclick="toggleNav()"></div>
+
+<div id="app">
+  <nav id="sidebar"></nav>
+  <main id="content"></main>
+</div>
+
+<script>
+const PASSWORD = '61steaks';
+
+function checkAuth() {
+  const v = document.getElementById('pw-input').value;
+  if (v === PASSWORD) {
+    localStorage.setItem('bass_auth', '1');
+    showApp();
+  } else {
+    document.getElementById('auth-err').style.display = 'block';
+  }
+}
+document.getElementById('pw-input').addEventListener('keydown', e => { if (e.key === 'Enter') checkAuth(); });
+
+function showApp() {
+  document.getElementById('auth-screen').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  document.getElementById('hamburger').style.display = '';
+  initApp();
+}
+
+function toggleNav() {
+  const nav = document.getElementById('sidebar');
+  const ov = document.getElementById('overlay');
+  nav.classList.toggle('open');
+  ov.classList.toggle('show');
+}
+
+// ============ NOTE DATABASE ============
+const NOTES = ['E','F','F#','G','G#','A','A#','B','C','C#','D','D#'];
+const NOTE_NAMES_FLAT = ['E','F','Gb','G','Ab','A','Bb','B','C','Db','D','Eb'];
+const STRING_OFFSETS = [0, 5, 10, 3]; // E=0, A=5, D=10, G=3
+const STRING_NAMES = ['E','A','D','G'];
+
+function noteAt(s, f) { return NOTES[(STRING_OFFSETS[s] + f) % 12]; }
+
+// ============ LEFTY MODE ============
+let isLefty = localStorage.getItem('bass_lefty') === '1';
+
+function toggleLefty() { setHandedness(!isLefty); }
+
+function setHandedness(lefty) {
+  isLefty = lefty;
+  localStorage.setItem('bass_lefty', isLefty ? '1' : '0');
+  route();
+}
+
+// ============ FRETBOARD GENERATOR ============
+function fretboard(startFret, endFret, notes, title) {
+  let leftyClass = isLefty ? ' lefty' : '';
+  let html = '<div class="fretboard-container">';
+  if (title) html += '<div class="fretboard-title">' + title + (isLefty ? ' (Left-handed view)' : '') + '</div>';
+  html += '<table class="fretboard' + leftyClass + '">';
+
+  // Build fret columns in order
+  let fretStart = Math.max(startFret, 1);
+  let fretCols = [];
+  for (let f = fretStart; f <= endFret; f++) fretCols.push(f);
+  if (isLefty) fretCols.reverse();
+
+  // Fret numbers row
+  html += '<tr><td class="str-label"></td>';
+  if (startFret === 0) html += '<td class="nut"></td>';
+  for (let f of fretCols) {
+    html += '<td class="fret-num">' + f + '</td>';
+  }
+  html += '</tr>';
+
+  // Strings (G at top, E at bottom)
+  for (let si = 3; si >= 0; si--) {
+    html += '<tr><td class="str-label">' + STRING_NAMES[si] + '</td>';
+    if (startFret === 0) {
+      let openNote = notes.find(n => n.s === si && n.f === 0);
+      html += '<td class="nut" style="position:relative">';
+      if (openNote) {
+        let cls = openNote.c || 'root';
+        html += '<span class="fret-dot open' + (cls !== 'root' ? ' note-style' : '') + '">' + openNote.l + '</span>';
+      }
+      html += '</td>';
+    }
+    for (let f of fretCols) {
+      let note = notes.find(n => n.s === si && n.f === f);
+      html += '<td class="fret-cell">';
+      if (note) {
+        html += '<span class="fret-dot ' + (note.c || 'root') + '">' + note.l + '</span>';
+      }
+      if (si === 0 && [3,5,7,9].includes(f)) {
+        html += '<span class="fret-marker"></span>';
+      }
+      if (si === 0 && f === 12) {
+        html += '<span class="fret-marker" style="left:40%"></span><span class="fret-marker" style="left:60%"></span>';
+      }
+      html += '</td>';
+    }
+    html += '</tr>';
+  }
+  html += '</table></div>';
+  return html;
+}
+
+// ============ SONG DATABASE ============
+const SONGS = [
+  { id:1, title:"Oh Happy Days", url:"https://seanmcgrathmusic.com/songs/oh-happy-days/", mp3:"188ML5ofhOJSdEmuIRyVeXevOGC9L1Fct", origKey:"G", capo:0, guitarChords:["G","C"],
+    bassNotes:["G","C"], positions:[{n:"G",s:0,f:3},{n:"C",s:1,f:3}],
+    structure:[{name:"Verse",prog:["G","C","G","C","G","C","G","C"]},{name:"Chorus",prog:["G","C","G","C","G","C","G","C"]}]},
+  { id:2, title:"Please Come Home", url:"https://seanmcgrathmusic.com/songs/please-come-home/", mp3:"1Kflw2QX6h8iNFj_KRTSv7eOoQLinxQAo", origKey:"C", capo:0, guitarChords:["C","F","G"],
+    bassNotes:["C","F","G"], positions:[{n:"C",s:1,f:3},{n:"F",s:0,f:1},{n:"G",s:0,f:3}],
+    structure:[{name:"Verse",prog:["C","F","C","F","G","F","G","F"]},{name:"Chorus",prog:["C","F","C","F"]}]},
+  { id:3, title:"I Feel It All", url:"https://seanmcgrathmusic.com/songs/i-feel-it-all/", mp3:"1HJoPtci52FpmiKTo79wiTCRaArX9wiYP", origKey:"G", capo:0, guitarChords:["G","C","D"],
+    bassNotes:["G","C","D"], positions:[{n:"G",s:0,f:3},{n:"C",s:1,f:3},{n:"D",s:2,f:0}],
+    structure:[{name:"Verse",prog:["G","C","G","C","G","C","G","C"]},{name:"Bridge",prog:["D","C","D","C","D","C"]},{name:"Chorus",prog:["G","C","G","C"]}]},
+  { id:4, title:"So Much Faster Now", url:"https://seanmcgrathmusic.com/songs/so-much-faster-now/", mp3:"1x4E_puzdW5XxrTQGKtnB_gOoPVDtXno8", origKey:"E", capo:0, guitarChords:["E","A","B7"],
+    bassNotes:["E","A","B"], positions:[{n:"E",s:0,f:0},{n:"A",s:1,f:0},{n:"B",s:1,f:2}],
+    structure:[{name:"Verse",prog:["E","A","E","A","E","B7","A","E"]}]},
+  { id:5, title:"Too Little Sanity Too Bad", url:"https://seanmcgrathmusic.com/songs/too-little-sanity-too-bad/", mp3:"1Zsb5VPzfzeZk9NHQZk08hy8gwebbTauQ", origKey:"A", capo:0, guitarChords:["A","C","G","D7"],
+    bassNotes:["A","C","G","D"], positions:[{n:"A",s:1,f:0},{n:"C",s:1,f:3},{n:"G",s:0,f:3},{n:"D",s:2,f:0}],
+    structure:[{name:"Verse",prog:["A","C","G","A","A","C","G","A"]},{name:"Chorus",prog:["D7","A","C","G","A"]}]},
+  { id:6, title:"Spare The Tonic And Pour The Gin", url:"https://seanmcgrathmusic.com/songs/spare-the-tonic-and-pour-the-gin/", mp3:"18y9ZJYrUEQQ3VGLUYrv26H2RDJd-o0Tg", origKey:"Dm", capo:0, guitarChords:["Dm","Am","Gm","C"],
+    bassNotes:["D","A","G","C"], positions:[{n:"D",s:2,f:0},{n:"A",s:1,f:0},{n:"G",s:0,f:3},{n:"C",s:1,f:3}],
+    structure:[{name:"Verse",prog:["Dm","Am","Gm","Dm"]},{name:"Chorus",prog:["C","Dm","C","Dm"]}]},
+  { id:7, title:"And So Are You", url:"https://seanmcgrathmusic.com/songs/and-so-are-you/", mp3:"1dINrbvCfFfRvFJaEzwlMBgg4RIJ5gqib", origKey:"Em", capo:0, guitarChords:["Em","B7","Am","C","D"],
+    bassNotes:["E","B","A","C","D"], positions:[{n:"E",s:0,f:0},{n:"B",s:1,f:2},{n:"A",s:1,f:0},{n:"C",s:1,f:3},{n:"D",s:2,f:0}],
+    structure:[{name:"Verse",prog:["Em","B7","Am","Em","B7","Em"]},{name:"Chorus",prog:["C","D","Em","C","D","Em"]}]},
+  { id:8, title:"A Boat Load Of Lies", url:"https://seanmcgrathmusic.com/songs/a-boat-load-of-lies/", mp3:"13emDpnftqBqHHzU0vEipqHC_LFa2YfIM", origKey:"Am", capo:0, guitarChords:["Am","E7","F","C","D"],
+    bassNotes:["A","E","F","C","D"], positions:[{n:"A",s:1,f:0},{n:"E",s:0,f:0},{n:"F",s:0,f:1},{n:"C",s:1,f:3},{n:"D",s:2,f:0}],
+    structure:[{name:"Verse",prog:["Am","E7","Am","F","E7","Am","F","E7","C","D"]},{name:"Outro",prog:["F","E7","C","D","Am","E7","Am"]}]},
+  { id:9, title:"Ain't No Rush On Me", url:"https://seanmcgrathmusic.com/songs/aint-no-rush-on-me/", mp3:"1_wPK-pUSOTNKy2-SH-xZo8TWBwN0lY43", origKey:"C", capo:0, guitarChords:["C","G","C7","F","Fm"],
+    bassNotes:["C","G","F"], positions:[{n:"C",s:1,f:3},{n:"G",s:0,f:3},{n:"F",s:0,f:1}],
+    structure:[{name:"Verse",prog:["C","G","C"]},{name:"Middle",prog:["C","C7","F","Fm","C","G","C"]}]},
+  { id:10, title:"Get Up Off Of Your Knees", url:"https://seanmcgrathmusic.com/songs/get-up-off-of-your-knees/", mp3:"1QpC8UhiTzBguGpxYG2biwTzHs-wDSjdD", origKey:"C", capo:0, guitarChords:["C","C7","F","Fm","E7","Am","G"],
+    bassNotes:["C","F","E","A","G"], positions:[{n:"C",s:1,f:3},{n:"F",s:0,f:1},{n:"E",s:0,f:0},{n:"A",s:1,f:0},{n:"G",s:0,f:3}],
+    structure:[{name:"Verse",prog:["C","C7","F","Fm","C","E7","Am","F","G","C"]},{name:"Bridge",prog:["F","C","F","G"]}]},
+  { id:11, title:"The Only Way Out Is Through", url:"https://seanmcgrathmusic.com/songs/the-only-way-out-is-through/", mp3:"1hmh7AibJEmzX1EGr82mB_cr2KaMF_BSJ", origKey:"E", capo:0, guitarChords:["E","A","F#m","C#m"],
+    bassNotes:["E","A","F#","C#"], positions:[{n:"E",s:0,f:0},{n:"A",s:1,f:0},{n:"F#",s:0,f:2},{n:"C#",s:1,f:4}],
+    structure:[{name:"Verse",prog:["E","A","E","A","E","F#m","A","E","C#m","A","E"]}]},
+  { id:12, title:"Just Like All The Rest", url:"https://seanmcgrathmusic.com/songs/just-like-all-the-rest/", mp3:"1wd8Xq_0eHToE752hr0jFCZ-STqOIrbeu", origKey:"Am", capo:2, capoKey:"Bm", guitarChords:["Am","E7","Dm"],
+    bassNotes:["B","F#","E"], positions:[{n:"B",s:1,f:2},{n:"F#",s:0,f:2},{n:"E",s:0,f:0}],
+    transposed:{Am:"Bm",E7:"F#7",Dm:"Em"},
+    structure:[{name:"Verse",prog:["Bm","F#7","Bm","F#7","Em","Bm","Em","F#7"]},{name:"Chorus",prog:["Bm","F#7","Bm","F#7"]}]},
+  { id:13, title:"Darker Shade Of You", url:"https://seanmcgrathmusic.com/songs/darker-shade-of-you/", mp3:"1U0UgsyenPPDo5fL58pgIaLlifPvBdVWQ", origKey:"Am", capo:2, capoKey:"Bm", guitarChords:["E","Am","Dm"],
+    bassNotes:["F#","B","E"], positions:[{n:"F#",s:0,f:2},{n:"B",s:1,f:2},{n:"E",s:0,f:0}],
+    transposed:{E:"F#",Am:"Bm",Dm:"Em"},
+    structure:[{name:"Verse",prog:["F#","Bm","F#","Bm","Em","Bm","F#","Bm"]},{name:"Outro",prog:["Bm","F#","Bm"]}]},
+  { id:14, title:"Trouble From You", url:"https://seanmcgrathmusic.com/songs/trouble-from-you/", mp3:"1M9OBVhJ1Q_DX_emYHZlIpXb1izFX-nZK", origKey:"Am", capo:2, capoKey:"Bm", guitarChords:["Am","E7","Dm","C"],
+    bassNotes:["B","F#","E","D"], positions:[{n:"B",s:1,f:2},{n:"F#",s:0,f:2},{n:"E",s:0,f:0},{n:"D",s:2,f:0}],
+    transposed:{Am:"Bm",E7:"F#7",Dm:"Em",C:"D"},
+    structure:[{name:"Verse",prog:["Bm","F#7","Bm","Em","D","F#7","Bm"]}]},
+  { id:15, title:"Colours", url:"https://seanmcgrathmusic.com/songs/colours/", mp3:"1oUBRkc-zLvBgeJ6TQ7-UitJH19VdPLBy", origKey:"G", capo:2, capoKey:"A", guitarChords:["G","C","D","Em"],
+    bassNotes:["A","D","E","F#"], positions:[{n:"A",s:1,f:0},{n:"D",s:2,f:0},{n:"E",s:0,f:0},{n:"F#",s:0,f:2}],
+    transposed:{G:"A",C:"D",D:"E",Em:"F#m"},
+    structure:[{name:"Chorus",prog:["A","D","E","A","D","E","F#m","D","E","A"]},{name:"Verse",prog:["A","D","E","A"]}]},
+  { id:16, title:"It's Fifty In The Shade", url:"https://seanmcgrathmusic.com/songs/its-fifty-in-the-shade/", mp3:"1wohKZU596pOtnuf_bEY4-fVR3ktCpupc", origKey:"Am", capo:2, capoKey:"Bm", guitarChords:["Am","G","F","C","E7"],
+    bassNotes:["B","A","G","D","F#"], positions:[{n:"B",s:1,f:2},{n:"A",s:1,f:0},{n:"G",s:0,f:3},{n:"D",s:2,f:0},{n:"F#",s:0,f:2}],
+    transposed:{Am:"Bm",G:"A",F:"G",C:"D",E7:"F#7"},
+    structure:[{name:"Verse",prog:["Bm","G","Bm","G","Bm","G","Bm","G"]},{name:"Chorus",prog:["D","A","Bm","G","D","A","G","F#7"]},{name:"Interlude",prog:["Bm","A","G"]}]},
+  { id:17, title:"The Second Time Around", url:"https://seanmcgrathmusic.com/songs/the-second-time-around/", mp3:"1m2sBPO6rlmc2T0RN9THSXmgh3GR8R4ls", origKey:"G", capo:5, capoKey:"C", guitarChords:["G","C","D","Em"],
+    bassNotes:["C","F","G","A"], positions:[{n:"C",s:1,f:3},{n:"F",s:0,f:1},{n:"G",s:0,f:3},{n:"A",s:1,f:0}],
+    transposed:{G:"C",C:"F",D:"G",Em:"Am"},
+    structure:[{name:"Verse",prog:["C","F","C","F","C","F","C","F","C","F","C","F","C"]},{name:"Bridge",prog:["G","F","C","G","F","C","Am","F","G","Am","F","C"]}]},
+  { id:18, title:"Tears Of Stone", url:"https://seanmcgrathmusic.com/songs/tears-of-stone/", mp3:"1LiG5IxDMDCQmJevG5-i25ZoIm4HY6UHc", origKey:"GMixo", capo:0, guitarChords:["FMaj7","C","G","GSus4","F","Am"],
+    bassNotes:["F","C","G","A"], positions:[{n:"F",s:0,f:1},{n:"C",s:1,f:3},{n:"G",s:0,f:3},{n:"A",s:1,f:0}],
+    structure:[{name:"Verse",prog:["F","C","F","C","F","C","G"]},{name:"Chorus",prog:["F","C","G","Am","F","C","G","F","C","G"]}]},
+  { id:19, title:"And There You Are", url:"https://seanmcgrathmusic.com/songs/and-there-you-are/", mp3:"10Kz8RcDABM2AhJ561JxaYSngXEG48nzq", origKey:"ADor", capo:3, capoKey:"CDor", guitarChords:["Am","D","F","E"],
+    bassNotes:["C","F","Ab","G"], positions:[{n:"C",s:1,f:3},{n:"F",s:0,f:1},{n:"Ab",s:0,f:4},{n:"G",s:0,f:3}],
+    transposed:{Am:"Cm",D:"F",F:"Ab",E:"G"},
+    structure:[{name:"Verse",prog:["Cm","F","Cm","F"]},{name:"Chorus",prog:["Ab","G","Ab","G","Cm"]}]},
+  { id:20, title:"My Only Son", url:"https://seanmcgrathmusic.com/songs/my-only-son/", mp3:"1cCgPwRz6ChKERBuCCLtM7QYKcrwPkyKB", origKey:"Am", capo:3, capoKey:"Cm", guitarChords:["Am","G","F","C"],
+    bassNotes:["C","Bb","Ab","Eb"], positions:[{n:"C",s:1,f:3},{n:"Bb",s:1,f:1},{n:"Ab",s:0,f:4},{n:"Eb",s:2,f:1}],
+    transposed:{Am:"Cm",G:"Bb",F:"Ab",C:"Eb"},
+    structure:[{name:"Verse",prog:["Cm","Bb","Cm","Ab","Bb","Cm","Ab","Bb","Cm","Bb","Cm","Bb","Cm"]},{name:"Chorus",prog:["Ab","Eb","Bb","Cm"]}]},
+];
+
+// ============ PHASES ============
+const PHASES = [
+  { name: "Bass Foundations", range: [1,9], color: "#3498db" },
+  { name: "First Songs", range: [10,21], color: "#2ecc71" },
+  { name: "Building Repertoire", range: [22,37], color: "#f39c12" },
+  { name: "Capo Songs", range: [38,55], color: "#e94560" },
+  { name: "Final Songs & Full Set", range: [56,65], color: "#533483" },
+];
+
+function getPhase(day) { return PHASES.find(p => day >= p.range[0] && day <= p.range[1]); }
+
+// ============ GLOSSARY ============
+const GLOSSARY = [
+  {term:"Bar / Measure",def:"A segment of music containing a set number of beats. Most songs use 4 beats per bar."},
+  {term:"Bass Line",def:"The sequence of notes played by the bass guitar in a song. For beginners, this is often the root notes of each chord."},
+  {term:"Beat",def:"The basic unit of time in music. When you tap your foot to a song, each tap is a beat."},
+  {term:"BPM (Beats Per Minute)",def:"The tempo or speed of a song. Higher BPM = faster song."},
+  {term:"Bridge (instrument)",def:"The metal piece on the bass body where the strings are anchored at the bottom end."},
+  {term:"Bridge (song section)",def:"A contrasting section in a song that connects the verse and chorus, often with different chords."},
+  {term:"Capo",def:"A clamp placed on a guitar's neck to raise the pitch of all strings. Guitarists use capos for convenience, but bass players don't use them — they play the actual sounding notes instead."},
+  {term:"Chord",def:"Three or more notes played together. On guitar, chords are strummed. On bass, you typically play the root note of each chord."},
+  {term:"Chord Progression",def:"A sequence of chords played in order. For example, G - C - D is a common progression."},
+  {term:"Chorus",def:"The repeated section of a song, usually containing the main hook or title."},
+  {term:"Dominant 7th (e.g. B7, D7, E7)",def:"A chord type that adds a flatted 7th note to a major chord, creating tension. On bass, you still just play the root note (B for B7, D for D7, etc.)."},
+  {term:"Dorian Mode",def:"A minor scale variation with a raised 6th note. Creates a jazzy, slightly brighter minor sound."},
+  {term:"Downbeat",def:"The first beat of a bar. Usually the strongest beat and where chord changes happen."},
+  {term:"Eighth Note",def:"A note lasting half a beat. Two eighth notes fill one beat. Counted as '1-and-2-and-3-and-4-and'."},
+  {term:"Flat (♭)",def:"Lowers a note by one semitone (one fret). Bb is one fret below B."},
+  {term:"Fret",def:"The metal strips on the bass neck. Pressing a string behind a fret shortens it and raises the pitch."},
+  {term:"Fretboard / Fingerboard",def:"The front surface of the bass neck where you press the strings against the frets."},
+  {term:"Half Note",def:"A note lasting 2 beats. Two half notes fill a 4-beat bar."},
+  {term:"Headstock",def:"The top of the bass neck where the tuning pegs are located."},
+  {term:"Key",def:"The 'home base' note and scale of a song. A song in the key of G revolves around the note G."},
+  {term:"Major",def:"A bright, happy-sounding quality. Major chords and keys tend to sound uplifting."},
+  {term:"Major 7th (e.g. FMaj7)",def:"A chord type that adds the natural 7th note to a major chord, creating a warm, jazzy sound. On bass, play the root note (F for FMaj7)."},
+  {term:"Minor",def:"A darker, sadder-sounding quality. Minor chords and keys have a more melancholic feel."},
+  {term:"Mixolydian Mode",def:"A major scale variation with a flatted 7th note. Common in blues and rock. Sounds bluesy."},
+  {term:"Nut",def:"The slotted piece at the top of the fretboard (near the headstock) that guides the strings. The space before fret 1."},
+  {term:"Octave",def:"The same note at a higher or lower pitch. The 12th fret produces the same note as the open string, one octave higher."},
+  {term:"Open String",def:"A string played without pressing any fret. The bass open strings are E, A, D, G (thickest to thinnest)."},
+  {term:"Outro",def:"The ending section of a song, often a repeated phrase that fades out or ends with a final chord."},
+  {term:"Pickup",def:"The magnetic device on the bass body that converts string vibrations into electrical signals sent to the amplifier."},
+  {term:"Plucking",def:"Using your plucking-hand fingers (usually index and middle) to pull and release the strings to make sound. The plucking hand is your left hand if you're a lefty, right hand if you're a righty."},
+  {term:"Quarter Note",def:"A note lasting exactly 1 beat. Four quarter notes fill a standard 4-beat bar. The most common note value."},
+  {term:"Rest",def:"A period of silence in music. Rests have the same durations as notes (whole rest = 4 beats of silence, etc.)."},
+  {term:"Rhythm",def:"The pattern of long and short notes and rests that gives music its groove and feel."},
+  {term:"Root Note",def:"The foundational note of a chord — the note that gives the chord its name. For a G chord, the root is G. This is the most important note for a bass player."},
+  {term:"Scale",def:"A sequence of notes in ascending or descending order. Scales are the building blocks of melodies and chords."},
+  {term:"Semitone / Half Step",def:"The smallest interval in Western music. One fret on the bass = one semitone. There are 12 semitones in an octave."},
+  {term:"Sharp (♯)",def:"Raises a note by one semitone (one fret). F# is one fret above F."},
+  {term:"STOP",def:"A musical direction meaning all instruments stop playing suddenly for dramatic effect, then resume."},
+  {term:"Suspended (Sus4)",def:"A chord where the 3rd is replaced by the 4th, creating an unresolved sound. On bass, play the root note (G for GSus4)."},
+  {term:"Tempo",def:"The speed of a song, measured in BPM (beats per minute)."},
+  {term:"Time Signature",def:"A notation showing how many beats are in each bar. 4/4 means 4 beats per bar (the most common)."},
+  {term:"Transposition / Transpose",def:"Moving all notes of a song up or down by the same interval. When a guitarist uses a capo, the bass player must transpose to match."},
+  {term:"Tuning Pegs",def:"The mechanical gears on the headstock used to tighten or loosen each string to adjust its pitch."},
+  {term:"Verse",def:"A section of a song that tells the story. Each verse usually has the same melody but different lyrics."},
+  {term:"Whole Note",def:"A note lasting 4 full beats — an entire bar in 4/4 time. The longest common note value."},
+  {term:"Whole Step / Tone",def:"An interval of two semitones (two frets). From E to F# is a whole step."},
+];
+
+// ============ LESSON DATA ============
+const LESSONS = [];
+
+// Helper to create song intro lesson
+function songIntro(day, song, extras) {
+  let sections = [];
+  // Song overview
+  let overviewHtml = '<dl class="song-meta">';
+  overviewHtml += '<dt>Song</dt><dd>' + song.title + '</dd>';
+  overviewHtml += '<dt>Key</dt><dd>' + (song.capoKey || song.origKey) + '</dd>';
+  if (song.capo > 0) {
+    overviewHtml += '<dt>Guitar Capo</dt><dd>Fret ' + song.capo + ' (' + song.origKey + ' shapes)</dd>';
+    overviewHtml += '<dt>Bass Plays In</dt><dd>' + song.capoKey + ' (transposed)</dd>';
+  }
+  overviewHtml += '<dt>Guitar Chords</dt><dd>' + song.guitarChords.join(', ') + '</dd>';
+  overviewHtml += '<dt>Bass Notes</dt><dd>' + song.bassNotes.join(', ') + '</dd>';
+  overviewHtml += '</dl>';
+  if (song.mp3) {
+    overviewHtml += '<div class="song-player"><iframe class="gdrive-player" src="https://drive.google.com/file/d/' + song.mp3 + '/preview" allow="autoplay" loading="lazy"></iframe><div class="song-player-links">';
+    if (song.url) overviewHtml += '<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; ' + song.title + ' on seanmcgrathmusic.com</a>';
+    overviewHtml += '<a class="song-dl-btn" href="https://drive.google.com/uc?export=download&id=' + song.mp3 + '" target="_blank" rel="noopener">&#8681; Download MP3</a>';
+    overviewHtml += '</div></div>';
+  } else if (song.url) {
+    overviewHtml += '<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; Listen to ' + song.title + ' on seanmcgrathmusic.com</a>';
+  }
+  sections.push({type:'html', title:'Song Overview', body: overviewHtml});
+
+  // Capo explanation if needed
+  if (song.capo > 0) {
+    let capoHtml = '<div class="capo-box"><h4>Capo Transposition</h4><p>Sean and Eugene play this song with a capo on fret ' + song.capo + '. They see ' + song.origKey + ' chord shapes, but the actual sounds are ' + song.capo + ' semitones higher.</p>';
+    capoHtml += '<table><tr><th>Guitar Shape</th><th>Actual Sound (You Play)</th></tr>';
+    for (let [orig, trans] of Object.entries(song.transposed)) {
+      capoHtml += '<tr><td>' + orig + '</td><td><strong>' + trans + '</strong></td></tr>';
+    }
+    capoHtml += '</table></div>';
+    sections.push({type:'html', title:'Capo Translation', body: capoHtml});
+  }
+
+  // Fretboard
+  let fbNotes = song.positions.map(p => ({s:p.s, f:p.f, l:p.n, c:'root'}));
+  let maxFret = Math.max(5, ...fbNotes.map(n => n.f + 1));
+  sections.push({type:'fretboard', title:'Your Bass Notes For This Song', startFret:0, endFret:maxFret, notes:fbNotes});
+
+  // Note positions text
+  let posHtml = '<p>Here are the bass notes you need and where to find them:</p><ul>';
+  song.positions.forEach(p => {
+    let how = p.f === 0 ? STRING_NAMES[p.s] + ' string open' : STRING_NAMES[p.s] + ' string, fret ' + p.f;
+    posHtml += '<li><strong>' + p.n + '</strong> — ' + how + '</li>';
+  });
+  posHtml += '</ul>';
+  sections.push({type:'html', title:'Note Positions', body: posHtml});
+
+  // Structure
+  let structHtml = '';
+  song.structure.forEach(sec => {
+    structHtml += '<div class="section-flow"><h4>' + sec.name + '</h4><div class="chord-sequence">';
+    sec.prog.forEach(ch => {
+      structHtml += '<span class="chord-badge">' + ch + '</span>';
+    });
+    structHtml += '</div></div>';
+  });
+  sections.push({type:'html', title:'Song Structure (Bass Notes)', body: structHtml});
+
+  // Exercise
+  sections.push({type:'exercise', title:'Exercise: Learn The Notes',
+    body:'<ol><li>Play each bass note from the fretboard diagram above, one at a time. Say the note name as you play it.</li><li>Practice switching between pairs of notes: ' + song.bassNotes.slice(0,2).join(' ↔ ') + ', then ' + (song.bassNotes.length > 2 ? song.bassNotes.slice(1,3).join(' ↔ ') : song.bassNotes.join(' ↔ ')) + '.</li><li>Play through the verse progression slowly — one note per beat, 4 beats per chord. Count "1, 2, 3, 4" for each chord.</li><li>When comfortable, try the full song structure.</li></ol>'});
+
+  if (extras) sections.push(...extras);
+  return sections;
+}
+
+function songPractice(day, song, extras) {
+  let sections = [];
+  // Warm-up
+  let fbNotes = song.positions.map(p => ({s:p.s, f:p.f, l:p.n, c:'root'}));
+  let maxFret = Math.max(5, ...fbNotes.map(n => n.f + 1));
+  sections.push({type:'fretboard', title:'Quick Reference: ' + song.title, startFret:0, endFret:maxFret, notes:fbNotes});
+  if (song.mp3) {
+    let playerHtml = '<div class="song-player"><iframe class="gdrive-player" src="https://drive.google.com/file/d/' + song.mp3 + '/preview" allow="autoplay" loading="lazy"></iframe><div class="song-player-links">';
+    if (song.url) playerHtml += '<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; ' + song.title + ' on seanmcgrathmusic.com</a>';
+    playerHtml += '<a class="song-dl-btn" href="https://drive.google.com/uc?export=download&id=' + song.mp3 + '" target="_blank" rel="noopener">&#8681; Download MP3</a>';
+    playerHtml += '</div></div>';
+    sections.push({type:'html', title:'', body: playerHtml});
+  } else if (song.url) {
+    sections.push({type:'html', title:'', body:'<a class="song-link" href="' + song.url + '" target="_blank" rel="noopener">&#9834; Listen to ' + song.title + ' on seanmcgrathmusic.com</a>'});
+  }
+  sections.push({type:'exercise', title:'Warm-Up (2 minutes)',
+    body:'<p>Play each bass note for this song 4 times in a row: ' + song.bassNotes.map(n=>'<strong>'+n+'</strong>').join(', ') + '. Focus on clean, even tone.</p>'});
+
+  // Full play-through
+  let structHtml = '<p>Play through the entire song structure. Count yourself in: "1, 2, 3, 4..."</p>';
+  song.structure.forEach(sec => {
+    structHtml += '<div class="section-flow"><h4>' + sec.name + '</h4><div class="chord-sequence">';
+    sec.prog.forEach(ch => {
+      structHtml += '<span class="chord-badge">' + ch + '</span>';
+    });
+    structHtml += '</div></div>';
+  });
+  sections.push({type:'html', title:'Full Play-Through', body: structHtml});
+
+  // Tips
+  sections.push({type:'exercise', title:'Practice Goals (15 minutes)',
+    body:'<ol><li><strong>Slow run:</strong> Play the whole song at half speed. Focus on hitting the right notes.</li><li><strong>Timing run:</strong> Play at a comfortable speed, counting "1, 2, 3, 4" out loud.</li><li><strong>Performance run:</strong> Play the song start to finish without stopping, even if you make mistakes. Keep going!</li></ol>'});
+  sections.push({type:'tip', body:"If you're struggling with a transition between two notes, isolate just that change and repeat it 10 times slowly before speeding up."});
+
+  if (extras) sections.push(...extras);
+  return sections;
+}
+
+// ===== DAY 1 =====
+LESSONS.push({ day:1, title:"Meet Your Bass", objectives:["Identify the parts of your bass guitar","Hold the bass in a comfortable playing position","Pluck your first notes on the open strings"],
+sections:[
+  {type:'html', title:'Welcome, Caroline!', body:'<p>Welcome to your bass journey! Over the next 65 days, you\'ll learn to play 20 songs with Sean and Eugene. Each day takes about 20 minutes. By the end, you\'ll be jamming with the band.</p><p>Today we start with the absolute basics: getting to know your instrument.</p>'},
+  {type:'html', title:'Parts Of Your Bass', body:'<p>Your bass guitar has these main parts:</p><ul><li><strong>Headstock</strong> — The top of the neck with the tuning pegs</li><li><strong>Tuning Pegs</strong> — Turn these to adjust string pitch (you already know this!)</li><li><strong>Nut</strong> — The small slotted piece where the neck meets the headstock. Strings rest in the slots.</li><li><strong>Neck / Fretboard</strong> — The long part you press strings against. The front surface is the fretboard.</li><li><strong>Frets</strong> — The metal strips across the fretboard. Pressing behind a fret shortens the string and raises the pitch.</li><li><strong>Body</strong> — The large main section</li><li><strong>Pickups</strong> — The magnetic bars under the strings that detect vibrations and send signal to your amp</li><li><strong>Bridge</strong> — The metal piece at the bottom of the body where strings are anchored</li></ul>'},
+  {type:'html', title:'Your Four Strings', body:'<p>Your bass has 4 strings tuned (thickest to thinnest):</p><table><tr><th>String</th><th>Note</th><th>Position</th></tr><tr><td>4th (thickest)</td><td><strong>E</strong></td><td>Closest to you / ceiling</td></tr><tr><td>3rd</td><td><strong>A</strong></td><td></td></tr><tr><td>2nd</td><td><strong>D</strong></td><td></td></tr><tr><td>1st (thinnest)</td><td><strong>G</strong></td><td>Farthest from you / floor</td></tr></table><p>Memory trick: <strong>E</strong>ddie <strong>A</strong>te <strong>D</strong>ynamite. <strong>G</strong>oodbye, Eddie!</p>'},
+  {type:'fretboard', title:'Your Open Strings', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:1,f:0,l:'A',c:'root'},{s:2,f:0,l:'D',c:'root'},{s:3,f:0,l:'G',c:'root'}]},
+  {type:'html', title:'How To Hold Your Bass', body:'<ul><li>Sit comfortably with the bass body resting on your thigh — the neck should angle slightly upward</li><li>Your <strong>fretting hand</strong> (right hand for lefties, left hand for righties) presses strings against the frets</li><li>Your <strong>plucking hand</strong> (left hand for lefties, right hand for righties) plucks the strings to make sound</li><li>Rest your plucking-hand thumb on the pickup or on the E string when not playing it</li></ul>'},
+  {type:'html', title:'Plucking Hand Technique', body:'<p>Use your <strong>index</strong> and <strong>middle</strong> fingers on your plucking hand to pluck the strings. Pull the string sideways and let your finger come to rest on the string above (thicker string). This is called <strong>rest stroke</strong>.</p><p>Alternate between index and middle finger: index, middle, index, middle. This gives you speed and endurance.</p><p><em>Note: Fingerstyle plucking is the most common technique for bass, but there are other methods such as slap bass and using a pick. Those aren\'t covered here — fingerstyle is all you need for these 20 songs.</em></p>'},
+  {type:'exercise', title:'Exercise: First Plucks', body:'<ol><li>Rest your plucking-hand thumb on the pickup</li><li>Pluck the open E string (thickest) with your index finger. Listen to the deep low note.</li><li>Pluck it again with your middle finger.</li><li>Alternate: index, middle, index, middle. Do this 8 times.</li><li>Move to the A string and repeat 8 plucks.</li><li>Move to D string, then G string. 8 plucks each.</li><li>Now go back: G, D, A, E. 8 plucks each.</li></ol>'},
+  {type:'tip', body:"Don't press too hard or pluck too aggressively. Let the bass and amp do the work. A relaxed touch produces better tone and won't tire your hands."},
+  {type:'html', title:'Fretting Hand Technique', body:'<p>When you press a string against a fret, press with your <strong>fingertip</strong>, just behind the fret (on the headstock side). Keep your thumb on the back of the neck, roughly behind your middle finger.</p><p>You don\'t need to squeeze hard — just enough for a clear note without buzzing.</p>'},
+  {type:'exercise', title:'Exercise: Your First Fretted Note', body:'<ol><li>Press the E string at fret 1 (just behind the first metal strip) with your index finger.</li><li>Pluck with your plucking hand. You should hear a note slightly higher than the open E. This is the note <strong>F</strong>.</li><li>Now press fret 2 with your middle finger and pluck. This is <strong>F#</strong> (F sharp).</li><li>Press fret 3 with your ring finger and pluck. This is <strong>G</strong>.</li><li>Play the sequence: open E → F (fret 1) → F# (fret 2) → G (fret 3). Repeat 3 times.</li></ol>'},
+  {type:'fretboard', title:'Your First Fretted Notes', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'note'},{s:0,f:2,l:'F#',c:'note'},{s:0,f:3,l:'G',c:'note'}]},
+]});
+
+// ===== DAY 2 =====
+LESSONS.push({ day:2, title:"The E String — Notes E to G#", objectives:["Learn every note on the E string from fret 0 to fret 5","Read a fretboard diagram","Play a simple E string exercise"],
+sections:[
+  {type:'html', title:'Reading Fretboard Diagrams', body:'<p>Throughout this course you\'ll see fretboard diagrams. Here\'s how to read them:</p><ul><li>The <strong>thick bar on the left</strong> is the <strong>nut</strong> (fret 0 / open string)</li><li>Strings go from <strong>G</strong> (top) to <strong>E</strong> (bottom) — same as looking down at your bass</li><li>Numbers along the bottom are <strong>fret numbers</strong></li><li><span style="color:var(--root-color)">Red circles</span> = root notes (primary notes to learn)</li><li><span style="color:var(--note-color)">Blue circles</span> = other notes</li><li><span style="color:var(--oct-color)">Green circles</span> = octave notes</li></ul>'},
+  {type:'html', title:'Notes On The E String', body:'<p>Each fret raises the pitch by one <strong>semitone</strong> (the smallest step in music). Here are the notes on your E string, frets 0 through 5:</p><table><tr><th>Fret</th><th>Note</th><th>Tip</th></tr><tr><td>0 (open)</td><td>E</td><td>Your thickest string!</td></tr><tr><td>1</td><td>F</td><td>Just one fret up from E</td></tr><tr><td>2</td><td>F# (F sharp)</td><td></td></tr><tr><td>3</td><td>G</td><td>Same note as your thinnest open string, but lower</td></tr><tr><td>4</td><td>G# (G sharp) / Ab (A flat)</td><td>Same note, two names!</td></tr><tr><td>5</td><td>A</td><td>Same note as your open A string!</td></tr></table>'},
+  {type:'fretboard', title:'E String: Frets 0–5', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'note'},{s:0,f:2,l:'F#',c:'note'},{s:0,f:3,l:'G',c:'note'},{s:0,f:4,l:'G#',c:'note'},{s:0,f:5,l:'A',c:'note'}]},
+  {type:'html', title:'Sharps And Flats — A Quick Note', body:'<p>A <strong>sharp (#)</strong> raises a note by one fret. A <strong>flat (b)</strong> lowers it by one fret. So F# and Gb are the <em>same note</em>, just named differently. Don\'t worry about when to use which name yet — we\'ll cover that as we go.</p><p>Notice that there is <strong>no sharp/flat between E and F</strong>, and <strong>no sharp/flat between B and C</strong>. These pairs are natural semitones. Every other pair of natural notes has a sharp/flat between them.</p>'},
+  {type:'exercise', title:'Exercise: E String Walk', body:'<ol><li>Play each note ascending: E (open) → F (1) → F# (2) → G (3) → G# (4) → A (5)</li><li>Say each note name out loud as you play it.</li><li>Now descend: A (5) → G# (4) → G (3) → F# (2) → F (1) → E (open)</li><li>Repeat 3 times, getting smoother each time.</li></ol>'},
+  {type:'exercise', title:'Exercise: Note Jumps', body:'<p>Practice jumping between notes (not just walking up/down):</p><ol><li>E (open) → G (3) → E (open) → G (3) — repeat 4 times</li><li>F (1) → A (5) → F (1) → A (5) — repeat 4 times</li><li>E (open) → A (5) → E (open) → A (5) — repeat 4 times</li></ol>'},
+  {type:'tip', body:"Use one finger per fret: index finger for fret 1, middle for fret 2, ring for fret 3, pinky for fret 4. For fret 5, shift your hand up slightly."},
+]});
+
+// ===== DAY 3 =====
+LESSONS.push({ day:3, title:"The A String — Notes A to D", objectives:["Learn notes on the A string from fret 0 to fret 5","Start recognizing note patterns across strings"],
+sections:[
+  {type:'fretboard', title:'A String: Frets 0–5', startFret:0, endFret:5,
+    notes:[{s:1,f:0,l:'A',c:'root'},{s:1,f:1,l:'Bb',c:'note'},{s:1,f:2,l:'B',c:'note'},{s:1,f:3,l:'C',c:'note'},{s:1,f:4,l:'C#',c:'note'},{s:1,f:5,l:'D',c:'note'}]},
+  {type:'html', title:'Notes On The A String', body:'<table><tr><th>Fret</th><th>Note</th><th>Tip</th></tr><tr><td>0 (open)</td><td>A</td><td>Same as E string fret 5!</td></tr><tr><td>1</td><td>Bb (B flat) / A#</td><td></td></tr><tr><td>2</td><td>B</td><td>Important note — you\'ll use this a lot</td></tr><tr><td>3</td><td>C</td><td>Very common note in many songs</td></tr><tr><td>4</td><td>C# (C sharp)</td><td></td></tr><tr><td>5</td><td>D</td><td>Same note as your open D string!</td></tr></table><p>See the pattern? Each string\'s fret 5 gives you the same note as the next open string. This is a key pattern on the bass.</p>'},
+  {type:'fretboard', title:'The Fret 5 Pattern', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:0,f:5,l:'A',c:'oct'},{s:1,f:0,l:'A',c:'root'},{s:1,f:5,l:'D',c:'oct'},{s:2,f:0,l:'D',c:'root'},{s:2,f:5,l:'G',c:'oct'},{s:3,f:0,l:'G',c:'root'}]},
+  {type:'exercise', title:'Exercise: A String Walk', body:'<ol><li>Play ascending: A (open) → Bb (1) → B (2) → C (3) → C# (4) → D (5)</li><li>Say each note name out loud.</li><li>Descend: D (5) → C# (4) → C (3) → B (2) → Bb (1) → A (open)</li><li>Repeat 3 times.</li></ol>'},
+  {type:'exercise', title:'Exercise: Cross-String Jumps', body:'<p>Now practice moving between the E and A strings:</p><ol><li>E string open (E) → A string open (A) — 4 times</li><li>E string fret 3 (G) → A string fret 3 (C) — 4 times</li><li>E string fret 1 (F) → A string fret 2 (B) — 4 times</li></ol>'},
+  {type:'tip', body:"When switching strings, keep your fretting hand relaxed. Let your fingers hover close to the strings so they're ready to press down quickly."},
+]});
+
+// ===== DAY 4 =====
+LESSONS.push({ day:4, title:"The D & G Strings", objectives:["Learn notes on the D string (frets 0–5)","Learn notes on the G string (frets 0–5)","Find any note in the first 5 frets"],
+sections:[
+  {type:'fretboard', title:'D String: Frets 0–5', startFret:0, endFret:5,
+    notes:[{s:2,f:0,l:'D',c:'root'},{s:2,f:1,l:'Eb',c:'note'},{s:2,f:2,l:'E',c:'note'},{s:2,f:3,l:'F',c:'note'},{s:2,f:4,l:'F#',c:'note'},{s:2,f:5,l:'G',c:'note'}]},
+  {type:'fretboard', title:'G String: Frets 0–5', startFret:0, endFret:5,
+    notes:[{s:3,f:0,l:'G',c:'root'},{s:3,f:1,l:'G#',c:'note'},{s:3,f:2,l:'A',c:'note'},{s:3,f:3,l:'Bb',c:'note'},{s:3,f:4,l:'B',c:'note'},{s:3,f:5,l:'C',c:'note'}]},
+  {type:'html', title:'D & G String Notes', body:'<p><strong>D String:</strong> D, Eb, E, F, F#, G (frets 0–5)</p><p><strong>G String:</strong> G, G#, A, Bb, B, C (frets 0–5)</p><p>You\'ve now seen all the notes in the first 5 frets across all 4 strings. That\'s 24 fret positions!</p>'},
+  {type:'fretboard', title:'Complete Map: All Notes Frets 0–5', startFret:0, endFret:5,
+    notes:[
+      {s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'note'},{s:0,f:2,l:'F#',c:'note'},{s:0,f:3,l:'G',c:'note'},{s:0,f:4,l:'G#',c:'note'},{s:0,f:5,l:'A',c:'note'},
+      {s:1,f:0,l:'A',c:'root'},{s:1,f:1,l:'Bb',c:'note'},{s:1,f:2,l:'B',c:'note'},{s:1,f:3,l:'C',c:'note'},{s:1,f:4,l:'C#',c:'note'},{s:1,f:5,l:'D',c:'note'},
+      {s:2,f:0,l:'D',c:'root'},{s:2,f:1,l:'Eb',c:'note'},{s:2,f:2,l:'E',c:'note'},{s:2,f:3,l:'F',c:'note'},{s:2,f:4,l:'F#',c:'note'},{s:2,f:5,l:'G',c:'note'},
+      {s:3,f:0,l:'G',c:'root'},{s:3,f:1,l:'G#',c:'note'},{s:3,f:2,l:'A',c:'note'},{s:3,f:3,l:'Bb',c:'note'},{s:3,f:4,l:'B',c:'note'},{s:3,f:5,l:'C',c:'note'}
+    ]},
+  {type:'exercise', title:'Exercise: Full Fretboard Walk', body:'<ol><li>Walk up the E string: E, F, F#, G, G#, A</li><li>Walk up the A string: A, Bb, B, C, C#, D</li><li>Walk up the D string: D, Eb, E, F, F#, G</li><li>Walk up the G string: G, G#, A, Bb, B, C</li><li>Now descend all the way back.</li></ol>'},
+  {type:'exercise', title:'Exercise: Note Finder', body:'<p>Without looking at the diagram, find these notes:</p><ol><li>Find <strong>C</strong> (A string, fret 3)</li><li>Find <strong>G</strong> (E string, fret 3)</li><li>Find <strong>F</strong> (E string, fret 1)</li><li>Find <strong>B</strong> (A string, fret 2)</li><li>Find <strong>F#</strong> (E string, fret 2)</li></ol><p>Check the diagram above to verify.</p>'},
+]});
+
+// ===== DAY 5 =====
+LESSONS.push({ day:5, title:"Root Notes — The Bass Player's Job", objectives:["Understand what a root note is","Know why root notes are essential for bass","Play root notes for major chords: E, A, D, G, C, F"],
+sections:[
+  {type:'html', title:'What Is A Root Note?', body:'<p>A <strong>root note</strong> is the note that gives a chord its name. When Sean plays a "G chord" on guitar, the root note is <strong>G</strong>. When Eugene plays an "Am chord," the root is <strong>A</strong>.</p><p>As a bass player, your #1 job is to <strong>play the root note</strong> of whatever chord the guitarists are playing. You are the foundation that holds everything together.</p><p>For every chord in every song, you just need to find and play one note — the root. That\'s it. This is why bass is a great instrument to start with!</p>'},
+  {type:'html', title:'Chord Names = Root Notes', body:'<p>The chord name tells you exactly what note to play:</p><table><tr><th>Chord</th><th>You Play</th></tr><tr><td>G major, Gm, G7, Gsus4</td><td><strong>G</strong></td></tr><tr><td>C major, Cm, C7, CMaj7</td><td><strong>C</strong></td></tr><tr><td>Am, A major, A7</td><td><strong>A</strong></td></tr><tr><td>E major, Em, E7</td><td><strong>E</strong></td></tr><tr><td>D major, Dm, D7</td><td><strong>D</strong></td></tr><tr><td>F major, Fm, FMaj7</td><td><strong>F</strong></td></tr></table><p>See the pattern? Ignore everything after the letter. <strong>The first letter is your note.</strong></p>'},
+  {type:'fretboard', title:'The 6 Most Common Root Notes', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'root'},{s:0,f:3,l:'G',c:'root'},{s:1,f:0,l:'A',c:'root'},{s:1,f:3,l:'C',c:'root'},{s:2,f:0,l:'D',c:'root'}]},
+  {type:'exercise', title:'Exercise: Root Note Drills', body:'<ol><li>Play each of the 6 root notes 4 times, saying the name: E, E, E, E → A, A, A, A → D, D, D, D → G, G, G, G → C, C, C, C → F, F, F, F</li><li>Random jumps: E → C → G → A → F → D → E (4 beats each)</li><li>Play a simple progression: G → C → G → C (4 beats each). This is from a real song you\'ll learn!</li></ol>'},
+  {type:'tip', body:"You now know enough to play bass on a simple song! The root note on beat 1 of each chord change is the single most important note in any bass line."},
+]});
+
+// ===== DAY 6 =====
+LESSONS.push({ day:6, title:"More Root Notes — B, F#, C#, Bb", objectives:["Find B, F#, C# on the fretboard","Understand how sharps and flats work as root notes","Know the position of every root note you'll need"],
+sections:[
+  {type:'html', title:'Expanding Your Root Note Map', body:'<p>Yesterday you learned the 6 most common root notes. Today we add the less common ones you\'ll need for the songbook:</p><table><tr><th>Note</th><th>Where</th><th>Songs That Use It</th></tr><tr><td>B</td><td>A string, fret 2</td><td>So Much Faster Now, several capo songs</td></tr><tr><td>F#</td><td>E string, fret 2</td><td>The Only Way Out, capo songs</td></tr><tr><td>C#</td><td>A string, fret 4</td><td>The Only Way Out</td></tr><tr><td>Bb</td><td>A string, fret 1</td><td>My Only Son (capo transposition)</td></tr><tr><td>Ab</td><td>E string, fret 4</td><td>My Only Son, And There You Are</td></tr><tr><td>Eb</td><td>D string, fret 1</td><td>My Only Son</td></tr></table>'},
+  {type:'fretboard', title:'All Root Notes You\'ll Ever Need', startFret:0, endFret:5,
+    notes:[
+      {s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'root'},{s:0,f:2,l:'F#',c:'note'},{s:0,f:3,l:'G',c:'root'},{s:0,f:4,l:'Ab',c:'note'},
+      {s:1,f:0,l:'A',c:'root'},{s:1,f:1,l:'Bb',c:'note'},{s:1,f:2,l:'B',c:'note'},{s:1,f:3,l:'C',c:'root'},{s:1,f:4,l:'C#',c:'note'},
+      {s:2,f:0,l:'D',c:'root'},{s:2,f:1,l:'Eb',c:'note'}
+    ]},
+  {type:'exercise', title:'Exercise: Find The Note', body:'<p>I\'ll name a note, you find it as fast as you can:</p><ol><li>F# — <em>(E string, fret 2)</em></li><li>B — <em>(A string, fret 2)</em></li><li>C# — <em>(A string, fret 4)</em></li><li>Ab — <em>(E string, fret 4)</em></li><li>Bb — <em>(A string, fret 1)</em></li><li>Eb — <em>(D string, fret 1)</em></li></ol><p>Repeat until you can find each one in under 2 seconds.</p>'},
+  {type:'exercise', title:'Exercise: Chord Call-Out', body:'<p>Pretend Sean calls out these chords. Play the root note immediately:</p><ol><li>"G chord!" → Play G (E string, fret 3)</li><li>"F sharp minor!" → Play F# (E string, fret 2)</li><li>"B seven!" → Play B (A string, fret 2)</li><li>"C sharp minor!" → Play C# (A string, fret 4)</li><li>"A flat!" → Play Ab (E string, fret 4)</li><li>"D!" → Play D (D string, open)</li></ol>'},
+  {type:'tip', body:"You don't need to memorize all these today. As we learn each song, you'll naturally remember the notes for that song. This is just an overview of the full map."},
+]});
+
+// ===== DAY 7 =====
+LESSONS.push({ day:7, title:"Rhythm Basics — Whole, Half & Quarter Notes", objectives:["Understand beats and bars","Play whole notes (4 beats), half notes (2 beats) and quarter notes (1 beat)","Count out loud while playing"],
+sections:[
+  {type:'html', title:'Beats And Bars', body:'<p>Music is organized into <strong>bars</strong> (also called measures). Most songs have <strong>4 beats per bar</strong>. You count: "1, 2, 3, 4, 1, 2, 3, 4..."</p><p>Think of it like marching: LEFT-right-LEFT-right. Beat 1 is always the strongest.</p>'},
+  {type:'html', title:'Note Values', body:'<table><tr><th>Note Type</th><th>Duration</th><th>Per Bar</th><th>Counting</th></tr><tr><td><strong>Whole Note</strong></td><td>4 beats</td><td>1</td><td>Play on 1, hold through 2, 3, 4</td></tr><tr><td><strong>Half Note</strong></td><td>2 beats</td><td>2</td><td>Play on 1 hold 2, play on 3 hold 4</td></tr><tr><td><strong>Quarter Note</strong></td><td>1 beat</td><td>4</td><td>Play on 1, 2, 3, 4</td></tr></table>'},
+  {type:'exercise', title:'Exercise: Whole Notes on G', body:'<p>Play the note G (E string, fret 3) as whole notes. Count out loud:</p><p>"<strong>G</strong> - 2 - 3 - 4 | <strong>G</strong> - 2 - 3 - 4 | <strong>G</strong> - 2 - 3 - 4 | <strong>G</strong> - 2 - 3 - 4"</p><p>Pluck once, then let it ring for the full 4 counts. Repeat for 4 bars.</p>'},
+  {type:'exercise', title:'Exercise: Half Notes on C', body:'<p>Play C (A string, fret 3) as half notes:</p><p>"<strong>C</strong> - 2 - <strong>C</strong> - 4 | <strong>C</strong> - 2 - <strong>C</strong> - 4"</p><p>Pluck on beats 1 and 3. Repeat for 4 bars.</p>'},
+  {type:'exercise', title:'Exercise: Quarter Notes on A', body:'<p>Play A (A string, open) as quarter notes:</p><p>"<strong>A</strong> - <strong>A</strong> - <strong>A</strong> - <strong>A</strong> | <strong>A</strong> - <strong>A</strong> - <strong>A</strong> - <strong>A</strong>"</p><p>Pluck on every beat. Keep it even. Repeat for 4 bars.</p>'},
+  {type:'exercise', title:'Exercise: Mixed Note Values', body:'<p>Now combine them on the note G:</p><p>Bar 1: Whole note (pluck on 1, hold 4 beats)<br>Bar 2: Half notes (pluck on 1 and 3)<br>Bar 3: Quarter notes (pluck on 1, 2, 3, 4)<br>Bar 4: Half notes again</p><p>Repeat the whole cycle 3 times, counting out loud.</p>'},
+  {type:'tip', body:"Counting out loud feels silly but it's the fastest way to develop solid timing. Every professional musician counts. Keep counting until it becomes automatic."},
+]});
+
+// ===== DAY 8 =====
+LESSONS.push({ day:8, title:"Eighth Notes & Rests", objectives:["Play eighth notes (half a beat each)","Understand rests (silence)","Combine different note values"],
+sections:[
+  {type:'html', title:'Eighth Notes', body:'<p><strong>Eighth notes</strong> are twice as fast as quarter notes. You fit 8 in a bar. Count them:</p><p>"<strong>1</strong>-and-<strong>2</strong>-and-<strong>3</strong>-and-<strong>4</strong>-and"</p><p>The numbers are <strong>downbeats</strong> and the "ands" are <strong>upbeats</strong>. Pluck on every number AND every "and."</p>'},
+  {type:'exercise', title:'Exercise: Eighth Notes on E', body:'<p>Play E (open E string) as eighth notes:</p><p>"<strong>E</strong>-and-<strong>E</strong>-and-<strong>E</strong>-and-<strong>E</strong>-and"</p><p>That\'s 8 plucks per bar. Alternate your index and middle fingers. Keep it even and slow at first. Do 4 bars.</p>'},
+  {type:'html', title:'Rests', body:'<p>A <strong>rest</strong> is silence — you stop the note from ringing. To mute a string, lightly touch it with your fretting hand or rest your plucking hand on it.</p><p>Rests have the same durations as notes:</p><ul><li>Whole rest = 4 beats of silence</li><li>Half rest = 2 beats of silence</li><li>Quarter rest = 1 beat of silence</li></ul>'},
+  {type:'exercise', title:'Exercise: Quarter Notes With Rests', body:'<p>Play G (E string, fret 3). "X" means rest (mute the string):</p><p>"<strong>G</strong> - X - <strong>G</strong> - X | <strong>G</strong> - X - <strong>G</strong> - X"</p><p>Pluck on beats 1 and 3, mute on beats 2 and 4. This creates a strong rhythmic feel. Do 4 bars.</p>'},
+  {type:'exercise', title:'Exercise: Two-Note Groove', body:'<p>Your first real bass line feel! Play G and C:</p><p>Bar 1: G G G G (quarter notes)<br>Bar 2: C C C C (quarter notes)<br>Bar 3: G-and-G-and G-and-G-and (eighth notes on G)<br>Bar 4: C (whole note, let it ring)</p><p>Repeat this 4-bar pattern 3 times. This is very close to a real bass part!</p>'},
+  {type:'tip', body:"Most bass lines use a mix of quarter notes and eighth notes. Whole notes are for slow, spacious sections. You rarely need anything faster than eighth notes in these songs."},
+]});
+
+// ===== DAY 9: TEST 1 =====
+LESSONS.push({ day:9, title:"TEST 1 — Foundations Check", objectives:["Test your note knowledge","Test your fretboard navigation","Review everything from Days 1–8"], isTest:true,
+sections:[
+  {type:'html', title:'Test Time!', body:'<p>Let\'s check how you\'re doing. Answer each question, then check your answers. Don\'t worry about getting everything perfect — this is just to identify what you might want to review.</p>'},
+  {type:'test', questions:[
+    {q:"What are the four open strings of the bass, from thickest to thinnest?", o:["E, A, D, G","G, D, A, E","E, A, G, D","A, D, G, B"], a:0},
+    {q:"What note is at the A string, fret 3?", o:["B","C","C#","D"], a:1},
+    {q:"What note do you get at E string, fret 1?", o:["E","Eb","F","F#"], a:2},
+    {q:"What note is at E string, fret 2?", o:["F","F#","G","E"], a:1},
+    {q:"If the guitarist plays a 'D7' chord, what note do you play?", o:["D7","D","7","A"], a:1},
+    {q:"How many beats does a quarter note last?", o:["4 beats","2 beats","1 beat","Half a beat"], a:2},
+    {q:"How do you count eighth notes?", o:["1, 2, 3, 4","1-and-2-and-3-and-4-and","1-e-and-a","1, 2, 3, 4, 5, 6, 7, 8"], a:1},
+    {q:"What is a root note?", o:["The lowest note possible","The note that gives a chord its name","The open string note","The first note in a scale"], a:1},
+    {q:"E string fret 5 gives you the same note as which open string?", o:["D string","G string","A string","E string"], a:2},
+    {q:"What note do you get at A string, fret 2?", o:["A#","B","C","Bb"], a:1},
+  ]},
+  {type:'exercise', title:'Practical Test', body:'<p>Play the following note sequence from memory (don\'t look at any diagrams!):</p><ol><li>G (E string, fret 3) — 4 quarter notes</li><li>C (A string, fret 3) — 4 quarter notes</li><li>D (D string, open) — 4 quarter notes</li><li>E (E string, open) — 4 quarter notes</li><li>F (E string, fret 1) — 4 quarter notes</li><li>A (A string, open) — 4 quarter notes</li></ol><p>If you can do this smoothly, you\'re ready for songs!</p>'},
+]});
+
+// ===== DAYS 10-11: Oh Happy Days =====
+LESSONS.push({ day:10, title:"Song: Oh Happy Days — Learn", objectives:["Learn the bass notes for Oh Happy Days","Play through the verse and chorus","Your first complete song!"],
+sections: songIntro(10, SONGS[0], [
+  {type:'tip', body:"This is the simplest song in the book — just two notes! G and C. Both are on fret 3 (E and A strings). Your fingers barely have to move."},
+])});
+
+LESSONS.push({ day:11, title:"Song: Oh Happy Days — Practice", objectives:["Play Oh Happy Days smoothly","Work on timing and transitions"],
+sections: songPractice(11, SONGS[0])});
+
+// ===== DAYS 12-13: Please Come Home =====
+LESSONS.push({ day:12, title:"Song: Please Come Home — Learn", objectives:["Learn the bass notes for Please Come Home","Navigate between C, F, and G"],
+sections: songIntro(12, SONGS[1], [
+  {type:'info', title:'New Note Position: F', body:'The note F is on E string, fret 1. This is a stretch from G (fret 3) but you\'ll get used to it quickly. Practice: G (fret 3) → F (fret 1) → G (fret 3) until it feels natural.'},
+])});
+
+LESSONS.push({ day:13, title:"Song: Please Come Home — Practice", objectives:["Play Please Come Home start to finish","Smooth out the C → F transition"],
+sections: songPractice(13, SONGS[1])});
+
+// ===== DAYS 14-15: I Feel It All =====
+LESSONS.push({ day:14, title:"Song: I Feel It All — Learn", objectives:["Learn bass notes for I Feel It All","Handle the bridge section with D and C"],
+sections: songIntro(14, SONGS[2], [
+  {type:'html', title:'The Bridge Section', body:'<p>This song has a bridge that uses D and C in addition to G. The bridge progression is:</p><div class="chord-sequence"><span class="chord-badge highlight">D</span><span class="chord-badge">C</span><span class="chord-badge highlight">D</span><span class="chord-badge">C</span><span class="chord-badge highlight">D</span><span class="chord-badge">C</span></div><p>D is your open D string, and C is A string fret 3. Practice switching between them.</p>'},
+])});
+
+LESSONS.push({ day:15, title:"Song: I Feel It All — Practice", objectives:["Play the full song including the bridge","Transitions between all three sections"],
+sections: songPractice(15, SONGS[2])});
+
+// ===== DAYS 16-17: So Much Faster Now =====
+LESSONS.push({ day:16, title:"Song: So Much Faster Now — Learn", objectives:["Learn bass notes for So Much Faster Now","Find B on the fretboard"],
+sections: songIntro(16, SONGS[3], [
+  {type:'html', title:'Introducing B', body:'<p>This is the first song that uses B (A string, fret 2). The progression uses B7, but remember — you just play the root note B.</p>'},
+  {type:'fretboard', title:'E, A, and B positions', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:1,f:0,l:'A',c:'root'},{s:1,f:2,l:'B',c:'root'}]},
+])});
+
+LESSONS.push({ day:17, title:"Song: So Much Faster Now — Practice", objectives:["Play So Much Faster Now at tempo","Clean E → A → B transitions"],
+sections: songPractice(17, SONGS[3])});
+
+// ===== DAY 18: Review =====
+LESSONS.push({ day:18, title:"Review Day — Songs 1–4", objectives:["Play through all 4 songs you've learned","Identify weak spots","Build confidence"],
+sections:[
+  {type:'html', title:'Review Day!', body:'<p>Today, run through all 4 songs you\'ve learned so far. Spend about 4 minutes on each:</p><ol><li><strong>Oh Happy Days</strong> (G, C)</li><li><strong>Please Come Home</strong> (C, F, G)</li><li><strong>I Feel It All</strong> (G, C, D)</li><li><strong>So Much Faster Now</strong> (E, A, B)</li></ol>'},
+  {type:'fretboard', title:'All Notes From Songs 1–4', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'root'},{s:0,f:3,l:'G',c:'root'},{s:1,f:0,l:'A',c:'root'},{s:1,f:2,l:'B',c:'root'},{s:1,f:3,l:'C',c:'root'},{s:2,f:0,l:'D',c:'root'}]},
+  {type:'exercise', title:'Quick-Fire Progression Practice', body:'<p>Play these chord progressions (4 beats each chord):</p><ol><li>G → C → G → C (Oh Happy Days)</li><li>C → F → G → C (Please Come Home)</li><li>G → C → D → C (I Feel It All bridge)</li><li>E → A → E → B → A → E (So Much Faster Now)</li></ol>'},
+  {type:'tip', body:"If any song still feels shaky, spend extra time on it tomorrow before moving on. It's better to be solid on 4 songs than wobbly on 6."},
+]});
+
+// ===== DAYS 19-20: Too Little Sanity =====
+LESSONS.push({ day:19, title:"Song: Too Little Sanity — Learn", objectives:["Learn bass notes for Too Little Sanity Too Bad","Handle the A → C → G → A verse pattern"],
+sections: songIntro(19, SONGS[4])});
+
+LESSONS.push({ day:20, title:"Song: Too Little Sanity — Practice", objectives:["Play Too Little Sanity at tempo","Nail the chorus section"],
+sections: songPractice(20, SONGS[4])});
+
+// ===== DAY 21: TEST 2 =====
+LESSONS.push({ day:21, title:"TEST 2 — First Songs Check", objectives:["Test your song knowledge","Review note positions"], isTest:true,
+sections:[
+  {type:'test', questions:[
+    {q:"In 'Oh Happy Days', what two bass notes do you play?", o:["G and D","G and C","C and F","E and A"], a:1},
+    {q:"What note do you get at A string, fret 3?", o:["B","C","C#","D"], a:1},
+    {q:"In 'So Much Faster Now', the B7 chord means you play what bass note?", o:["B7","B","7","E"], a:1},
+    {q:"How many beats does a half note get?", o:["1","2","3","4"], a:1},
+    {q:"The song 'I Feel It All' uses G, C and which other note in the bridge?", o:["A","D","E","F"], a:1},
+    {q:"What note do you get at E string, fret 1?", o:["E","F","F#","G"], a:1},
+    {q:"What note is the open D string?", o:["E","A","D","G"], a:2},
+    {q:"In 'Please Come Home', the progression C → F → G uses notes on which strings?", o:["All on E string","E and A strings","All on A string","D string only"], a:1},
+  ]},
+  {type:'exercise', title:'Practical: Play 3 Songs Back to Back', body:'<p>Without stopping, play through: Oh Happy Days (2 verses) → Please Come Home (2 verses + chorus) → I Feel It All (verse + bridge). This simulates a live set!</p>'},
+]});
+
+// ===== DAYS 22-23: Spare The Tonic =====
+LESSONS.push({ day:22, title:"Song: Spare The Tonic — Learn", objectives:["Learn bass notes for Spare The Tonic And Pour The Gin","Play in a minor key (Dm)"],
+sections: songIntro(22, SONGS[5], [
+  {type:'html', title:'Minor Keys', body:'<p>This song is in <strong>D minor (Dm)</strong>. Don\'t worry — as a bass player, you still just play root notes. Whether a chord is major or minor doesn\'t change what note you play. Dm = D, Am = A, Gm = G.</p>'},
+])});
+
+LESSONS.push({ day:23, title:"Song: Spare The Tonic — Practice", objectives:["Play Spare The Tonic smoothly"],
+sections: songPractice(23, SONGS[5])});
+
+// ===== DAY 24: Minor Keys =====
+LESSONS.push({ day:24, title:"Minor Keys Explained", objectives:["Understand the difference between major and minor","Know that bass plays the same root regardless","Prepare for more minor-key songs"],
+sections:[
+  {type:'html', title:'Major vs Minor', body:'<p><strong>Major</strong> chords sound bright and happy. <strong>Minor</strong> chords sound darker and sadder. But here\'s the good news for you:</p><p style="font-size:1.2rem; text-align:center; padding:1rem; background:var(--bg3); border-radius:8px; margin:1rem 0;"><strong>The bass note is the same either way!</strong></p><p>G major and G minor both have the root note G. Am and A major both have root note A. The guitarists worry about major vs minor — you just need the letter.</p>'},
+  {type:'html', title:'Common Minor Chords In The Songbook', body:'<table><tr><th>Chord</th><th>Bass Note</th><th>Position</th></tr><tr><td>Am</td><td>A</td><td>A string, open</td></tr><tr><td>Em</td><td>E</td><td>E string, open</td></tr><tr><td>Dm</td><td>D</td><td>D string, open</td></tr><tr><td>Gm</td><td>G</td><td>E string, fret 3</td></tr><tr><td>Fm</td><td>F</td><td>E string, fret 1</td></tr></table>'},
+  {type:'fretboard', title:'Minor Chord Root Notes', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E(m)',c:'root'},{s:0,f:1,l:'F(m)',c:'root'},{s:0,f:3,l:'G(m)',c:'root'},{s:1,f:0,l:'A(m)',c:'root'},{s:2,f:0,l:'D(m)',c:'root'}]},
+  {type:'exercise', title:'Exercise: Major/Minor Quick Switch', body:'<p>I\'ll call out chords — play the root note regardless of major/minor:</p><ol><li>G major → play G</li><li>Am → play A</li><li>C major → play C</li><li>Em → play E</li><li>Dm → play D</li><li>F major → play F</li></ol><p>See? Same notes you already know!</p>'},
+]});
+
+// ===== DAYS 25-26: And So Are You =====
+LESSONS.push({ day:25, title:"Song: And So Are You — Learn", objectives:["Learn bass notes for And So Are You","Handle 5 different notes in one song"],
+sections: songIntro(25, SONGS[6])});
+
+LESSONS.push({ day:26, title:"Song: And So Are You — Practice", objectives:["Play And So Are You confidently"],
+sections: songPractice(26, SONGS[6])});
+
+// ===== DAYS 27-28: A Boat Load Of Lies =====
+LESSONS.push({ day:27, title:"Song: A Boat Load Of Lies — Learn", objectives:["Learn bass notes for A Boat Load Of Lies","Navigate Am progressions"],
+sections: songIntro(27, SONGS[7])});
+
+LESSONS.push({ day:28, title:"Song: A Boat Load Of Lies — Practice", objectives:["Play A Boat Load Of Lies start to finish"],
+sections: songPractice(28, SONGS[7])});
+
+// ===== DAYS 29-30: Ain't No Rush On Me =====
+LESSONS.push({ day:29, title:"Song: Ain't No Rush On Me — Learn", objectives:["Learn bass notes for Ain't No Rush On Me","Understand C7 and Fm — same roots as C and F"],
+sections: songIntro(29, SONGS[8], [
+  {type:'html', title:'Special Chord Names', body:'<p>This song uses C7, Fm, and other fancy-sounding chords. Remember the rule: <strong>ignore everything after the letter</strong>.</p><table><tr><th>Guitar Chord</th><th>You Play</th></tr><tr><td>C7 (C dominant 7th)</td><td>C</td></tr><tr><td>Fm (F minor)</td><td>F</td></tr></table><p>So this song only needs 3 bass notes: C, G, and F. Easy!</p>'},
+])});
+
+LESSONS.push({ day:30, title:"Song: Ain't No Rush On Me — Practice", objectives:["Play Ain't No Rush On Me smoothly"],
+sections: songPractice(30, SONGS[8])});
+
+// ===== DAYS 31-32: Get Up Off Your Knees =====
+LESSONS.push({ day:31, title:"Song: Get Up Off Your Knees — Learn", objectives:["Learn bass notes for Get Up Off Of Your Knees","Handle a 5-note song with many chord changes"],
+sections: songIntro(31, SONGS[9], [
+  {type:'html', title:'Lots of Chords, Same Root Notes', body:'<p>This song has 7 guitar chord names (C, C7, F, Fm, E7, Am, G) but only <strong>5 bass notes</strong>: C, F, E, A, G. The C7 is just C, the Fm is just F, the E7 is just E, and the Am is just A. You already know all of these!</p>'},
+])});
+
+LESSONS.push({ day:32, title:"Song: Get Up Off Your Knees — Practice", objectives:["Play Get Up Off Your Knees at tempo"],
+sections: songPractice(32, SONGS[9])});
+
+// ===== DAY 33: Sharps/Flats Deep Dive =====
+LESSONS.push({ day:33, title:"Sharps & Flats Deep Dive", objectives:["Confidently find F# and C# on the fretboard","Prepare for The Only Way Out Is Through"],
+sections:[
+  {type:'html', title:'F# and C# — Your Next Notes', body:'<p>The next song uses F#m and C#m chords. You\'ll play F# and C#.</p><p><strong>F#</strong> is one fret above F. Since F is at E string fret 1, F# is at <strong>E string fret 2</strong>.</p><p><strong>C#</strong> is one fret above C. Since C is at A string fret 3, C# is at <strong>A string fret 4</strong>.</p>'},
+  {type:'fretboard', title:'F# and C# Positions', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'note'},{s:0,f:2,l:'F#',c:'root'},{s:1,f:0,l:'A',c:'root'},{s:1,f:3,l:'C',c:'note'},{s:1,f:4,l:'C#',c:'root'}]},
+  {type:'exercise', title:'Exercise: Sharp Note Practice', body:'<ol><li>Play F (fret 1) → F# (fret 2) → F → F# — 8 times. Feel the one-fret shift.</li><li>Play C (A fret 3) → C# (A fret 4) → C → C# — 8 times.</li><li>Play the progression: E → A → F# → C# → A → E (4 beats each). This is from the next song!</li></ol>'},
+]});
+
+// ===== DAYS 34-35: The Only Way Out =====
+LESSONS.push({ day:34, title:"Song: The Only Way Out — Learn", objectives:["Learn bass notes for The Only Way Out Is Through","Play F# and C# in a song context"],
+sections: songIntro(34, SONGS[10])});
+
+LESSONS.push({ day:35, title:"Song: The Only Way Out — Practice", objectives:["Play The Only Way Out Is Through confidently"],
+sections: songPractice(35, SONGS[10])});
+
+// ===== DAY 36: Review =====
+LESSONS.push({ day:36, title:"Review Day — Songs 5–11", objectives:["Run through all songs from Phase 3"],
+sections:[
+  {type:'html', title:'Repertoire Check', body:'<p>You now know <strong>11 songs</strong>! Run through each one. Spend about 2 minutes per song:</p><ol><li>Too Little Sanity Too Bad (A, C, G, D)</li><li>Spare The Tonic (D, A, G, C)</li><li>And So Are You (E, B, A, C, D)</li><li>A Boat Load Of Lies (A, E, F, C, D)</li><li>Ain\'t No Rush On Me (C, G, F)</li><li>Get Up Off Your Knees (C, F, E, A, G)</li><li>The Only Way Out (E, A, F#, C#)</li></ol>'},
+  {type:'exercise', title:'Transition Challenge', body:'<p>Play these quick-change sequences (2 beats per chord, no pausing!):</p><ol><li>A → C → G → D → A</li><li>E → B → A → C → D</li><li>C → F → E → A → G</li><li>E → A → F# → C# → A → E</li></ol>'},
+]});
+
+// ===== DAY 37: TEST 3 =====
+LESSONS.push({ day:37, title:"TEST 3 — Repertoire Check", objectives:["Test songs 5–11","Verify fretboard knowledge"], isTest:true,
+sections:[
+  {type:'test', questions:[
+    {q:"In 'Spare The Tonic', the Gm chord means you play what bass note?", o:["Gm","G","G minor","Gm note"], a:1},
+    {q:"How many different bass notes are in 'Get Up Off Your Knees'?", o:["7 (one per chord name)","5","3","4"], a:1},
+    {q:"What note do you get at E string, fret 2?", o:["F","F#","G","G#"], a:1},
+    {q:"What note do you get at A string, fret 4?", o:["C","C#","D","D#"], a:1},
+    {q:"C7, CMaj7 and Cm all share what bass root note?", o:["C7","Cm","C","They're all different"], a:2},
+    {q:"How many songs have you learned so far?", o:["7","9","11","13"], a:2},
+  ]},
+  {type:'exercise', title:'Speed Round', body:'<p>Play the root note as fast as you can when you see the chord name. Aim for under 2 seconds each:</p><p>D7... Am... F#m... E... C#m... G... Bb... F... B7... C</p>'},
+]});
+
+// ===== DAY 38: Capo Theory =====
+LESSONS.push({ day:38, title:"What Is A Capo?", objectives:["Understand what a capo does","Learn why you need to transpose","Prepare for capo songs"],
+sections:[
+  {type:'html', title:'The Capo Explained', body:'<p>A <strong>capo</strong> is a clamp that guitarists place across the neck to raise the pitch of all strings. It\'s like having a movable nut.</p><p><strong>Why do they use it?</strong> It lets them play comfortable chord shapes in different keys. Instead of learning difficult chord shapes, they keep their easy shapes and use a capo to shift the key up.</p><p><strong>Why does this matter to you?</strong> You don\'t have a capo on bass. When Sean puts a capo on fret 2 and plays "Am shapes," the actual sound coming out is <strong>Bm</strong>. You need to play the <em>real</em> note (B), not what the guitarist sees (Am).</p>'},
+  {type:'html', title:'How Transposition Works', body:'<p>Each fret = one semitone. So:</p><ul><li><strong>Capo 2</strong> = everything is raised 2 semitones</li><li><strong>Capo 3</strong> = everything is raised 3 semitones</li><li><strong>Capo 5</strong> = everything is raised 5 semitones</li></ul><p>To transpose, count up from the original note by the number of capo frets:</p><table><tr><th>Original</th><th>+1</th><th>+2</th><th>+3</th><th>+4</th><th>+5</th></tr><tr><td>A</td><td>Bb</td><td>B</td><td>C</td><td>C#</td><td>D</td></tr><tr><td>Am</td><td>Bbm</td><td>Bm</td><td>Cm</td><td>C#m</td><td>Dm</td></tr><tr><td>E</td><td>F</td><td>F#</td><td>G</td><td>G#</td><td>A</td></tr><tr><td>G</td><td>G#</td><td>A</td><td>Bb</td><td>B</td><td>C</td></tr></table>'},
+  {type:'html', title:'The Songbook Capo Songs', body:'<p>Here are the capo songs in the songbook:</p><table><tr><th>Song</th><th>Capo</th><th>Guitar Sees</th><th>Actually Sounds</th></tr><tr><td>Just Like All The Rest</td><td>2</td><td>Am, E7, Dm</td><td>Bm, F#7, Em</td></tr><tr><td>Darker Shade Of You</td><td>2</td><td>E, Am, Dm</td><td>F#, Bm, Em</td></tr><tr><td>Trouble From You</td><td>2</td><td>Am, E7, Dm, C</td><td>Bm, F#7, Em, D</td></tr><tr><td>Colours</td><td>2</td><td>G, C, D, Em</td><td>A, D, E, F#m</td></tr><tr><td>It\'s Fifty In The Shade</td><td>2</td><td>Am, G, F, C, E7</td><td>Bm, A, G, D, F#7</td></tr><tr><td>The Second Time Around</td><td>5</td><td>G, C, D, Em</td><td>C, F, G, Am</td></tr><tr><td>My Only Son</td><td>3</td><td>Am, G, F, C</td><td>Cm, Bb, Ab, Eb</td></tr><tr><td>And There You Are</td><td>3</td><td>Am, D, F, E</td><td>Cm, F, Ab, G</td></tr></table>'},
+  {type:'tip', body:"Don't panic about the transposition math. For each song, I'll give you the exact bass notes to play. You just need to understand WHY they're different from what the guitarists call them."},
+]});
+
+// ===== DAY 39: Capo 2 Practice =====
+LESSONS.push({ day:39, title:"Capo 2 Transposition Practice", objectives:["Practice transposing common chords up 2 semitones","Get comfortable with B and F# positions"],
+sections:[
+  {type:'html', title:'Capo 2: The Most Common', body:'<p>Five of the eight capo songs use Capo 2. The most common transpositions you\'ll see:</p><table><tr><th>Guitar Shape</th><th>You Play</th><th>Position</th></tr><tr><td>Am</td><td><strong>B (for Bm)</strong></td><td>A string, fret 2</td></tr><tr><td>E or E7</td><td><strong>F#</strong></td><td>E string, fret 2</td></tr><tr><td>Dm</td><td><strong>E (for Em)</strong></td><td>E string, open</td></tr><tr><td>G</td><td><strong>A</strong></td><td>A string, open</td></tr><tr><td>C</td><td><strong>D</strong></td><td>D string, open</td></tr><tr><td>F</td><td><strong>G</strong></td><td>E string, fret 3</td></tr></table>'},
+  {type:'fretboard', title:'Key Capo 2 Notes: B, F#, E', startFret:0, endFret:5,
+    notes:[{s:0,f:0,l:'E',c:'root'},{s:0,f:2,l:'F#',c:'root'},{s:1,f:2,l:'B',c:'root'}]},
+  {type:'exercise', title:'Exercise: Capo 2 Drill', body:'<p>Practice the most common capo 2 progression (Am → E7 becomes Bm → F#7):</p><ol><li>B (A string fret 2) → F# (E string fret 2) — 4 beats each, repeat 8 times</li><li>B → F# → E (open) — 4 beats each, repeat 4 times</li><li>B → F# → E → D (open) — 4 beats each, repeat 4 times</li></ol>'},
+]});
+
+// ===== DAYS 40-41: Just Like All The Rest =====
+LESSONS.push({ day:40, title:"Song: Just Like All The Rest — Learn", objectives:["Learn bass notes for Just Like All The Rest","First capo song!"],
+sections: songIntro(40, SONGS[11], [
+  {type:'html', title:'Your First Capo Song!', body:'<p>Sean and Eugene will have their capos on fret 2. They\'ll see Am, E7, and Dm shapes. You\'ll play B, F#, and E. Only 3 notes!</p><p>Note the (STOP) marking in the lyrics — this means everyone stops playing for a dramatic pause, then continues.</p>'},
+])});
+
+LESSONS.push({ day:41, title:"Song: Just Like All The Rest — Practice", objectives:["Play Just Like All The Rest with confidence"],
+sections: songPractice(41, SONGS[11])});
+
+// ===== DAYS 42-43: Darker Shade Of You =====
+LESSONS.push({ day:42, title:"Song: Darker Shade Of You — Learn", objectives:["Learn bass notes for Darker Shade Of You"],
+sections: songIntro(42, SONGS[12], [
+  {type:'tip', body:"Good news: this song uses the SAME bass notes as Just Like All The Rest (B, F#, E). You already know these! The difference is just the order and rhythm."},
+])});
+
+LESSONS.push({ day:43, title:"Song: Darker Shade Of You — Practice", objectives:["Play Darker Shade Of You smoothly"],
+sections: songPractice(43, SONGS[12])});
+
+// ===== DAYS 44-45: Trouble From You =====
+LESSONS.push({ day:44, title:"Song: Trouble From You — Learn", objectives:["Learn bass notes for Trouble From You"],
+sections: songIntro(44, SONGS[13], [
+  {type:'html', title:'Same Notes Plus D', body:'<p>This song adds D to the B, F#, E combination from the previous two songs. D is your open D string, which you know well by now.</p>'},
+])});
+
+LESSONS.push({ day:45, title:"Song: Trouble From You — Practice", objectives:["Play Trouble From You start to finish"],
+sections: songPractice(45, SONGS[13])});
+
+// ===== DAY 46: TEST 4 =====
+LESSONS.push({ day:46, title:"TEST 4 — Capo Songs Check", objectives:["Test capo transposition knowledge","Test songs 12–14"], isTest:true,
+sections:[
+  {type:'test', questions:[
+    {q:"A guitarist has capo on fret 2 and plays an Am shape. What note do you play?", o:["A","Am","B","Bm"], a:2},
+    {q:"A guitarist has capo 2 and plays E7. What do you play?", o:["E","F","F#","G"], a:2},
+    {q:"Why doesn't the bass use a capo?", o:["Bass strings are too thick","Bass players transpose to the real sounding key instead","Capos don't exist for bass","It would break the strings"], a:1},
+    {q:"What note do you get at A string, fret 2?", o:["B","F#","C","G#"], a:0},
+    {q:"Songs 12, 13, and 14 all use which common bass notes?", o:["A, E, D","B, F#, E","G, C, D","C, F, G"], a:1},
+    {q:"Capo 2 raises everything by how many semitones?", o:["1","2","3","5"], a:1},
+  ]},
+]});
+
+// ===== DAYS 47-48: Colours =====
+LESSONS.push({ day:47, title:"Song: Colours — Learn", objectives:["Learn bass notes for Colours","Handle the A, D, E, F#m progression"],
+sections: songIntro(47, SONGS[14])});
+
+LESSONS.push({ day:48, title:"Song: Colours — Practice", objectives:["Play Colours at tempo"],
+sections: songPractice(48, SONGS[14])});
+
+// ===== DAYS 49-50: Fifty In The Shade =====
+LESSONS.push({ day:49, title:"Song: It's Fifty In The Shade — Learn", objectives:["Learn bass notes for It's Fifty In The Shade","Handle 5 notes in a capo song"],
+sections: songIntro(49, SONGS[15])});
+
+LESSONS.push({ day:50, title:"Song: It's Fifty In The Shade — Practice", objectives:["Play Fifty In The Shade confidently"],
+sections: songPractice(50, SONGS[15])});
+
+// ===== DAY 51: Capo 3 & 5 =====
+LESSONS.push({ day:51, title:"Capo 3 & Capo 5 Transposition", objectives:["Transpose chords up 3 and 5 semitones","Prepare for the final capo songs"],
+sections:[
+  {type:'html', title:'Capo 3 Transposition', body:'<table><tr><th>Guitar Shape</th><th>You Play (Capo 3)</th><th>Position</th></tr><tr><td>Am</td><td><strong>Cm → C</strong></td><td>A string, fret 3</td></tr><tr><td>G</td><td><strong>Bb</strong></td><td>A string, fret 1</td></tr><tr><td>F</td><td><strong>Ab</strong></td><td>E string, fret 4</td></tr><tr><td>C</td><td><strong>Eb</strong></td><td>D string, fret 1</td></tr><tr><td>D</td><td><strong>F</strong></td><td>E string, fret 1</td></tr><tr><td>E</td><td><strong>G</strong></td><td>E string, fret 3</td></tr></table>'},
+  {type:'fretboard', title:'Capo 3 Notes: Bb, Ab, Eb', startFret:0, endFret:5,
+    notes:[{s:0,f:1,l:'F',c:'note'},{s:0,f:3,l:'G',c:'note'},{s:0,f:4,l:'Ab',c:'root'},{s:1,f:1,l:'Bb',c:'root'},{s:1,f:3,l:'C',c:'note'},{s:2,f:1,l:'Eb',c:'root'}]},
+  {type:'html', title:'Capo 5 Transposition', body:'<table><tr><th>Guitar Shape</th><th>You Play (Capo 5)</th><th>Position</th></tr><tr><td>G</td><td><strong>C</strong></td><td>A string, fret 3</td></tr><tr><td>C</td><td><strong>F</strong></td><td>E string, fret 1</td></tr><tr><td>D</td><td><strong>G</strong></td><td>E string, fret 3</td></tr><tr><td>Em</td><td><strong>Am → A</strong></td><td>A string, open</td></tr></table><p>Capo 5 is the easiest transposition because the resulting notes (C, F, G, A) are all ones you already know!</p>'},
+  {type:'exercise', title:'Exercise: Capo 3 Note Finding', body:'<ol><li>Find Ab (E string, fret 4) — play 4 times</li><li>Find Bb (A string, fret 1) — play 4 times</li><li>Find Eb (D string, fret 1) — play 4 times</li><li>Progression: C → Bb → Ab → Eb (4 beats each, repeat 4 times)</li></ol>'},
+]});
+
+// ===== DAYS 52-53: Second Time Around =====
+LESSONS.push({ day:52, title:"Song: The Second Time Around — Learn", objectives:["Learn bass notes for The Second Time Around","Capo 5 — familiar notes!"],
+sections: songIntro(52, SONGS[16], [
+  {type:'tip', body:"Even though this has capo 5, the actual bass notes are C, F, G, and A — all notes you've been playing since week 2! This is one of the easiest capo songs."},
+])});
+
+LESSONS.push({ day:53, title:"Song: The Second Time Around — Practice", objectives:["Play The Second Time Around smoothly"],
+sections: songPractice(53, SONGS[16])});
+
+// ===== DAYS 54-55: Tears Of Stone =====
+LESSONS.push({ day:54, title:"Song: Tears Of Stone — Learn", objectives:["Learn bass notes for Tears Of Stone","Handle FMaj7 and GSus4 chord names"],
+sections: songIntro(54, SONGS[17], [
+  {type:'html', title:'Fancy Chord Names, Simple Bass Notes', body:'<p>This song has some complex-sounding guitar chords: FMaj7, GSus4. But for bass:</p><table><tr><th>Guitar Chord</th><th>You Play</th></tr><tr><td>FMaj7 (F Major 7th)</td><td><strong>F</strong></td></tr><tr><td>GSus4 (G Suspended 4th)</td><td><strong>G</strong></td></tr><tr><td>C</td><td><strong>C</strong></td></tr><tr><td>Am</td><td><strong>A</strong></td></tr></table><p>Just four familiar notes: F, G, C, A. The guitarists can worry about the fancy voicings!</p>'},
+])});
+
+LESSONS.push({ day:55, title:"Song: Tears Of Stone — Practice", objectives:["Play Tears Of Stone at tempo"],
+sections: songPractice(55, SONGS[17])});
+
+// ===== DAY 56: Flats Deep Dive =====
+LESSONS.push({ day:56, title:"Flats Deep Dive — Ab, Bb, Eb", objectives:["Master the flat notes needed for final songs","Prepare for My Only Son and And There You Are"],
+sections:[
+  {type:'html', title:'Your Final New Notes', body:'<p>The last two songs use some less common notes: <strong>Ab, Bb, and Eb</strong>. These are flat notes — each one is one fret (one semitone) below a natural note.</p><ul><li><strong>Ab</strong> = one fret below A = <strong>E string, fret 4</strong></li><li><strong>Bb</strong> = one fret below B = <strong>A string, fret 1</strong></li><li><strong>Eb</strong> = one fret below E = <strong>D string, fret 1</strong></li></ul>'},
+  {type:'fretboard', title:'Flat Notes Map', startFret:0, endFret:5,
+    notes:[{s:0,f:4,l:'Ab',c:'root'},{s:1,f:1,l:'Bb',c:'root'},{s:2,f:1,l:'Eb',c:'root'},
+      {s:0,f:0,l:'E',c:'note'},{s:0,f:1,l:'F',c:'note'},{s:0,f:3,l:'G',c:'note'},
+      {s:1,f:0,l:'A',c:'note'},{s:1,f:3,l:'C',c:'note'}]},
+  {type:'exercise', title:'Exercise: Flat Note Workout', body:'<ol><li>Play Ab (E string fret 4) → 4 times, saying "A flat" each time</li><li>Play Bb (A string fret 1) → 4 times</li><li>Play Eb (D string fret 1) → 4 times</li><li>Progression: C → Bb → Ab → Eb (4 beats each) — repeat 4 times</li><li>Add G: C → Bb → Ab → G → C (this appears in the songs!)</li></ol>'},
+  {type:'tip', body:"Ab and G are just one fret apart (E string frets 4 and 3). Bb and A are one fret apart (A string frets 1 and 0). These small shifts are easy once you know where to put your finger."},
+]});
+
+// ===== DAYS 57-58: And There You Are =====
+LESSONS.push({ day:57, title:"Song: And There You Are — Learn", objectives:["Learn bass notes for And There You Are","Handle the Ab note"],
+sections: songIntro(57, SONGS[18])});
+
+LESSONS.push({ day:58, title:"Song: And There You Are — Practice", objectives:["Play And There You Are smoothly"],
+sections: songPractice(58, SONGS[18])});
+
+// ===== DAYS 59-60: My Only Son =====
+LESSONS.push({ day:59, title:"Song: My Only Son — Learn", objectives:["Learn bass notes for My Only Son","Handle all three flat notes: Bb, Ab, Eb"],
+sections: songIntro(59, SONGS[19], [
+  {type:'html', title:'The Most Challenging Song', body:'<p>This is the most challenging song in the book because all four bass notes are less common: C, Bb, Ab, Eb. But you practiced these on Day 56, so you\'re ready!</p><p>Take it slow. This song has a slow, emotional feel, so you have plenty of time between notes.</p>'},
+])});
+
+LESSONS.push({ day:60, title:"Song: My Only Son — Practice", objectives:["Play My Only Son with feeling"],
+sections: songPractice(60, SONGS[19])});
+
+// ===== DAY 61: TEST 5 =====
+LESSONS.push({ day:61, title:"TEST 5 — Final Theory Test", objectives:["Complete theory review","Verify all transpositions"], isTest:true,
+sections:[
+  {type:'test', questions:[
+    {q:"Capo 3 on an Am shape produces what actual chord?", o:["Bm","Cm","C#m","Dm"], a:1},
+    {q:"Capo 5 on a G shape produces what actual chord?", o:["A","Bb","B","C"], a:3},
+    {q:"What note do you get at E string, fret 4?", o:["G","Ab","A","Bb"], a:1},
+    {q:"What note do you get at D string, fret 1?", o:["D","Db","Eb","E"], a:2},
+    {q:"FMaj7 chord — what bass note?", o:["FMaj7","F major 7","F","Fmaj"], a:2},
+    {q:"GSus4 chord — what bass note?", o:["Gsus","G4","G","Sus4"], a:2},
+    {q:"How many total songs are in the set?", o:["15","18","20","25"], a:2},
+    {q:"What note do you get at A string, fret 1?", o:["Bb","B","Ab","A"], a:0},
+  ]},
+]});
+
+// ===== DAYS 62-63: Full Set Practice =====
+LESSONS.push({ day:62, title:"Full Set Run — Songs 1–10", objectives:["Play songs 1–10 back to back","Build stamina and memory"],
+sections:[
+  {type:'html', title:'Set List: First Half', body:'<p>Play through these 10 songs with minimal breaks (just a few seconds to find the first note of the next song). This simulates a real gig!</p><ol><li>Oh Happy Days (G, C)</li><li>Please Come Home (C, F, G)</li><li>I Feel It All (G, C, D)</li><li>So Much Faster Now (E, A, B)</li><li>Too Little Sanity (A, C, G, D)</li><li>Spare The Tonic (D, A, G, C)</li><li>And So Are You (E, B, A, C, D)</li><li>A Boat Load Of Lies (A, E, F, C, D)</li><li>Ain\'t No Rush On Me (C, G, F)</li><li>Get Up Off Your Knees (C, F, E, A, G)</li></ol>'},
+  {type:'exercise', title:'Performance Exercise', body:'<p>For each song: play one verse + one chorus (or two verses for songs without a distinct chorus). Don\'t stop if you make a mistake — just keep going. That\'s how it works in a live band!</p>'},
+  {type:'tip', body:"If you get lost, find the root note of the next chord and jump back in. Nobody in the audience will notice a bass player recovering from a stumble — they only notice if you stop entirely."},
+]});
+
+LESSONS.push({ day:63, title:"Full Set Run — Songs 11–20", objectives:["Play songs 11–20 back to back","Complete repertoire confidence check"],
+sections:[
+  {type:'html', title:'Set List: Second Half', body:'<ol start="11"><li>The Only Way Out (E, A, F#, C#)</li><li>Just Like All The Rest (B, F#, E)</li><li>Darker Shade Of You (B, F#, E)</li><li>Trouble From You (B, F#, E, D)</li><li>Colours (A, D, E, F#)</li><li>It\'s Fifty In The Shade (B, A, G, D, F#)</li><li>The Second Time Around (C, F, G, A)</li><li>Tears Of Stone (F, C, G, A)</li><li>And There You Are (C, F, Ab, G)</li><li>My Only Son (C, Bb, Ab, Eb)</li></ol>'},
+  {type:'exercise', title:'Performance Exercise', body:'<p>Same as yesterday: one verse + one chorus per song, no stopping. You\'re simulating the second half of a gig.</p>'},
+]});
+
+// ===== DAY 64: Complete Run-Through =====
+LESSONS.push({ day:64, title:"Complete Set Run-Through", objectives:["Play all 20 songs","Identify any remaining weak spots"],
+sections:[
+  {type:'html', title:'The Full Set!', body:'<p>Today you play all 20 songs, just like a real gig. This is your dress rehearsal. Set aside 20–25 minutes if you can.</p><p>Play one verse + one chorus per song. Keep moving. No restarts.</p>'},
+  {type:'fretboard', title:'Master Reference: Every Note You Need', startFret:0, endFret:5,
+    notes:[
+      {s:0,f:0,l:'E',c:'root'},{s:0,f:1,l:'F',c:'root'},{s:0,f:2,l:'F#',c:'root'},{s:0,f:3,l:'G',c:'root'},{s:0,f:4,l:'Ab',c:'root'},
+      {s:1,f:0,l:'A',c:'root'},{s:1,f:1,l:'Bb',c:'root'},{s:1,f:2,l:'B',c:'root'},{s:1,f:3,l:'C',c:'root'},{s:1,f:4,l:'C#',c:'root'},
+      {s:2,f:0,l:'D',c:'root'},{s:2,f:1,l:'Eb',c:'root'}
+    ]},
+  {type:'html', title:'Quick Reference Cheat Sheet', body:'<table><tr><th>#</th><th>Song</th><th>Bass Notes</th></tr>' + SONGS.map((s,i) => '<tr><td>'+(i+1)+'</td><td><a href="'+s.url+'" target="_blank" rel="noopener" style="color:var(--accent)">'+s.title+'</a></td><td>'+s.bassNotes.join(', ')+'</td></tr>').join('') + '</table>'},
+  {type:'exercise', title:'Weak Spot Drill', body:'<p>After your run-through, identify the 2–3 songs you found hardest. Spend the last 5 minutes drilling just the chord transitions from those songs.</p>'},
+]});
+
+// ===== DAY 65: Graduation =====
+LESSONS.push({ day:65, title:"Graduation — You're Ready!", objectives:["Celebrate your achievement","Get tips for playing with the band","Know what to work on next"],
+sections:[
+  {type:'html', title:'Congratulations, Caroline! 🎉', body:'<p>You\'ve completed the 65-day Bass Camp! You can now play bass on all 20 songs in the Hassetts songbook. That\'s an incredible achievement.</p><p>Here\'s what you\'ve learned:</p><ul><li>12 unique root note positions on the fretboard</li><li>How to read chord charts and know what bass note to play</li><li>How to transpose for 8 different capo songs</li><li>Rhythm fundamentals: whole, half, quarter, and eighth notes</li><li>20 complete songs!</li></ul>'},
+  {type:'html', title:'Tips For Playing With Sean & Eugene', body:'<ol><li><strong>Listen to the guitarists</strong> — Follow their chord changes. If you get lost, listen for the chord change and jump to the right root note.</li><li><strong>Lock in with the rhythm</strong> — Your job is to be the foundation. Keep steady time. If in doubt, play quarter notes on the root.</li><li><strong>Don\'t overplay</strong> — A simple, steady root note sounds better than a busy, shaky bass line. Less is more.</li><li><strong>Watch for the STOP moments</strong> — Some songs have dramatic stops. Everyone stops together. Wait for the cue to come back in.</li><li><strong>Make mistakes confidently</strong> — If you hit a wrong note, don\'t freeze. Just move to the right note on the next beat. Nobody will notice.</li><li><strong>Have fun!</strong> — You\'re making music with friends. Enjoy it!</li></ol>'},
+  {type:'html', title:'What To Work On Next', body:'<ul><li><strong>Walking bass lines</strong> — Instead of just root notes, add passing notes to walk between chords</li><li><strong>Octave patterns</strong> — Play root → octave patterns (root on E/A string, octave 2 frets up on D/G string)</li><li><strong>Fills</strong> — Add small melodic runs at the end of sections</li><li><strong>Dynamics</strong> — Play softer in verses, louder in choruses</li><li><strong>Learn by ear</strong> — Try to figure out bass lines from recordings</li></ul>'},
+  {type:'tip', body:"The best way to get better now is to play with people. Every jam session teaches you more than a week of solo practice. Get together with Sean and Eugene and play!"},
+]});
+
+
+// ============ APP LOGIC ============
+let progress = JSON.parse(localStorage.getItem('bass_progress') || '{}');
+
+function saveProgress() { localStorage.setItem('bass_progress', JSON.stringify(progress)); }
+function getStatus(day) { return progress['day_' + day] || 'not-started'; }
+function setStatus(day, status) { progress['day_' + day] = status; saveProgress(); }
+
+function initApp() {
+  renderNav();
+  // Route based on hash
+  window.addEventListener('hashchange', route);
+  route();
+}
+
+function route() {
+  const hash = location.hash || '#dashboard';
+  if (hash === '#dashboard') renderDashboard();
+  else if (hash === '#glossary') renderGlossary();
+  else if (hash.startsWith('#day/')) {
+    const day = parseInt(hash.split('/')[1]);
+    renderLesson(day);
+  }
+  // Close mobile nav
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+  window.scrollTo(0, 0);
+}
+
+function renderNav() {
+  const nav = document.getElementById('sidebar');
+  let html = '<div class="nav-header"><h2>Bass Camp</h2><button class="nav-close" onclick="toggleNav()">&times;</button></div>';
+  html += '<div class="hand-selector"><span class="hand-label">Fretboard:</span><div class="hand-btn-group"><button class="hand-btn' + (!isLefty ? ' active' : '') + '" onclick="setHandedness(false)">Righty</button><button class="hand-btn' + (isLefty ? ' active' : '') + '" onclick="setHandedness(true)">Lefty</button></div></div>';
+  html += '<div class="nav-section"><a class="nav-item" href="#dashboard" onclick="closeNav()">Dashboard</a></div>';
+
+  PHASES.forEach(phase => {
+    html += '<div class="nav-section"><div class="nav-section-title">' + phase.name + '</div>';
+    for (let d = phase.range[0]; d <= phase.range[1]; d++) {
+      const lesson = LESSONS.find(l => l.day === d);
+      if (!lesson) continue;
+      const status = getStatus(d);
+      const active = location.hash === '#day/' + d ? ' active' : '';
+      html += '<a class="nav-item' + active + '" href="#day/' + d + '" onclick="closeNav()"><span class="status ' + status + '"></span>Day ' + d + ': ' + truncate(lesson.title, 20) + '</a>';
+    }
+    html += '</div>';
+  });
+
+  html += '<div class="nav-section"><a class="nav-item" href="#glossary" onclick="closeNav()">Glossary</a></div>';
+  nav.innerHTML = html;
+}
+
+function closeNav() {
+  if (window.innerWidth <= 768) {
+    document.getElementById('sidebar').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+}
+
+function truncate(s, n) { return s.length > n ? s.substring(0, n) + '…' : s; }
+
+function renderDashboard() {
+  const main = document.getElementById('content');
+  const total = LESSONS.length;
+  const finished = LESSONS.filter(l => getStatus(l.day) === 'finished').length;
+  const inProg = LESSONS.filter(l => getStatus(l.day) === 'in-progress').length;
+  const pct = Math.round((finished / total) * 100);
+
+  let html = '<div class="dashboard-header"><h1>Caroline\'s Bass Practice Plan</h1>';
+  html += '<p>20 songs · 65 days · 20 minutes/day</p></div>';
+
+  html += '<div class="stats-row">';
+  html += '<div class="stat-card"><div class="num green">' + finished + '</div><div class="label">Finished</div></div>';
+  html += '<div class="stat-card"><div class="num yellow">' + inProg + '</div><div class="label">In Progress</div></div>';
+  html += '<div class="stat-card"><div class="num blue">' + (total - finished - inProg) + '</div><div class="label">Remaining</div></div>';
+  html += '<div class="stat-card"><div class="num">' + pct + '%</div><div class="label">Complete</div></div>';
+  html += '</div>';
+
+  html += '<div class="progress-bar-container"><div class="progress-bar-fill" style="width:' + pct + '%"></div></div>';
+
+  PHASES.forEach(phase => {
+    html += '<div class="phase-section"><div class="phase-title"><span style="color:' + phase.color + '">●</span> ' + phase.name + ' (Days ' + phase.range[0] + '–' + phase.range[1] + ')</div>';
+    html += '<div class="day-grid">';
+    for (let d = phase.range[0]; d <= phase.range[1]; d++) {
+      const lesson = LESSONS.find(l => l.day === d);
+      if (!lesson) continue;
+      const status = getStatus(d);
+      const cls = lesson.isTest ? ' test' : '';
+      html += '<a class="day-card ' + status + cls + '" href="#day/' + d + '">';
+      html += '<div class="day-num">Day ' + d + (lesson.isTest ? ' 📝' : '') + '</div>';
+      html += '<div class="day-title">' + lesson.title + '</div>';
+      html += '</a>';
+    }
+    html += '</div></div>';
+  });
+
+  main.innerHTML = html;
+  renderNav();
+}
+
+function renderLesson(day) {
+  const lesson = LESSONS.find(l => l.day === day);
+  if (!lesson) { location.hash = '#dashboard'; return; }
+  const phase = getPhase(day);
+  const main = document.getElementById('content');
+  const status = getStatus(day);
+
+  let html = '<div class="lesson-header">';
+  html += '<div class="lesson-phase">' + (phase ? phase.name : '') + '</div>';
+  html += '<h1 class="lesson-title">Day ' + day + ': ' + lesson.title + '</h1>';
+  html += '</div>';
+
+  if (lesson.objectives) {
+    html += '<div class="lesson-objectives"><h3>Today\'s Objectives</h3><ul>';
+    lesson.objectives.forEach(o => html += '<li>' + o + '</li>');
+    html += '</ul></div>';
+  }
+
+  lesson.sections.forEach(sec => {
+    html += renderSection(sec);
+  });
+
+  // Status buttons
+  html += '<div class="lesson-controls">';
+  html += '<button class="status-btn finish' + (status === 'finished' ? ' active' : '') + '" onclick="markDay(' + day + ',\'finished\')">Finished</button>';
+  html += '<button class="status-btn progress' + (status === 'in-progress' ? ' active' : '') + '" onclick="markDay(' + day + ',\'in-progress\')">In Progress</button>';
+  html += '</div>';
+
+  // Navigation
+  html += '<div class="lesson-nav">';
+  if (day > 1) html += '<a href="#day/' + (day - 1) + '">← Day ' + (day - 1) + '</a>';
+  else html += '<span></span>';
+  html += '<a href="#dashboard">Dashboard</a>';
+  if (day < LESSONS.length) html += '<a href="#day/' + (day + 1) + '">Day ' + (day + 1) + ' →</a>';
+  else html += '<span></span>';
+  html += '</div>';
+
+  main.innerHTML = html;
+  renderNav();
+}
+
+function renderSection(sec) {
+  let html = '';
+  switch (sec.type) {
+    case 'html':
+    case 'text':
+      html += '<div class="lesson-section"><h3>' + (sec.title || '') + '</h3>' + sec.body + '</div>';
+      break;
+    case 'info':
+      html += '<div class="lesson-section"><div class="info-box"><strong>' + (sec.title || 'Info') + ':</strong> ' + sec.body + '</div></div>';
+      break;
+    case 'fretboard':
+      html += '<div class="lesson-section">' + fretboard(sec.startFret, sec.endFret, sec.notes, sec.title) + '</div>';
+      break;
+    case 'exercise':
+      html += '<div class="lesson-section"><div class="exercise-box"><h4>' + (sec.title || 'Exercise') + '</h4>' + sec.body + '</div></div>';
+      break;
+    case 'tip':
+      html += '<div class="lesson-section"><div class="tip-box">' + sec.body + '</div></div>';
+      break;
+    case 'test':
+      html += renderTest(sec.questions);
+      break;
+  }
+  return html;
+}
+
+function renderTest(questions) {
+  let html = '<div class="test-container">';
+  questions.forEach((q, i) => {
+    html += '<div class="test-q" id="tq_' + i + '"><h4>Question ' + (i+1) + ': ' + q.q + '</h4><div class="options">';
+    q.o.forEach((opt, j) => {
+      html += '<button class="opt-btn" onclick="checkAnswer(' + i + ',' + j + ',' + q.a + ')">' + opt + '</button>';
+    });
+    html += '</div><div class="test-result" id="tr_' + i + '"></div></div>';
+  });
+  html += '<div class="test-score" id="test-score" style="display:none"><div class="score-num" id="score-num"></div><div class="label">Score</div></div>';
+  html += '</div>';
+  return html;
+}
+
+let testAnswered = {};
+let testTotal = 0;
+let testCorrect = 0;
+
+function checkAnswer(qi, selected, correct) {
+  if (testAnswered[qi]) return;
+  testAnswered[qi] = true;
+  const qDiv = document.getElementById('tq_' + qi);
+  const btns = qDiv.querySelectorAll('.opt-btn');
+  btns.forEach((btn, j) => {
+    btn.classList.add('disabled');
+    if (j === correct) btn.classList.add('correct');
+    if (j === selected && j !== correct) btn.classList.add('wrong');
+  });
+  const result = document.getElementById('tr_' + qi);
+  if (selected === correct) {
+    result.innerHTML = '<span style="color:var(--green)">Correct!</span>';
+    testCorrect++;
+  } else {
+    result.innerHTML = '<span style="color:var(--accent)">The answer is: ' + btns[correct].textContent + '</span>';
+  }
+  result.classList.add('show');
+  testTotal++;
+
+  // Check if all answered
+  const totalQs = qDiv.parentElement.querySelectorAll('.test-q').length;
+  if (testTotal >= totalQs) {
+    const scoreDiv = document.getElementById('test-score');
+    scoreDiv.style.display = 'block';
+    document.getElementById('score-num').textContent = testCorrect + ' / ' + totalQs;
+  }
+}
+
+function markDay(day, status) {
+  const current = getStatus(day);
+  if (current === status) {
+    setStatus(day, 'not-started');
+  } else {
+    setStatus(day, status);
+  }
+  renderLesson(day);
+}
+
+function renderGlossary() {
+  const main = document.getElementById('content');
+  let html = '<div class="lesson-header"><h1 class="lesson-title">Glossary</h1></div>';
+  html += '<div class="glossary-list">';
+  GLOSSARY.forEach(g => {
+    html += '<div class="glossary-item"><dl><dt>' + g.term + '</dt><dd>' + g.def + '</dd></dl></div>';
+  });
+  html += '</div>';
+  html += '<div class="lesson-nav"><a href="#dashboard">← Dashboard</a></div>';
+  main.innerHTML = html;
+  renderNav();
+}
+
+// Reset test state on navigation
+window.addEventListener('hashchange', () => { testAnswered = {}; testTotal = 0; testCorrect = 0; });
+
+// Auto-login if previously authenticated (must be after all const definitions)
+if (localStorage.getItem('bass_auth') === '1') showApp();
+</script>
+</body>
+</html>
