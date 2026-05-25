@@ -337,11 +337,28 @@ tr[data-string="3"] .fret-cell { background: linear-gradient(180deg, transparent
 .hand-btn.active { background: var(--accent); color: #fff; }
 .hand-btn:hover:not(.active) { background: var(--bg3); }
 /* Lefty fretboard */
-.fretboard.lefty { direction: rtl; }
-.fretboard.lefty td { direction: ltr; }
 .fretboard.lefty .str-label { text-align: left; padding-left: 4px; padding-right: 0; }
-.fretboard.lefty .fret-cell { border-right: none; border-left: 1px solid #555; }
-.fretboard.lefty .fret-dot.open { left: auto; right: -2px; transform: translate(50%, -50%); }
+/* Interactive audio */
+.fret-dot[data-note] { cursor: pointer; transition: transform .1s, box-shadow .1s; }
+.fret-dot[data-note]:hover { transform: translate(-50%, -50%) scale(1.2); box-shadow: 0 0 8px rgba(233,69,96,.6); }
+.fret-dot[data-note].playing { transform: translate(-50%, -50%) scale(1.3); box-shadow: 0 0 12px rgba(233,69,96,.8); }
+.fret-dot.open[data-note]:hover { transform: translate(-50%, -50%) scale(1.2); }
+.fret-dot.open[data-note].playing { transform: translate(-50%, -50%) scale(1.3); }
+.play-controls { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-top: .6rem; }
+.play-btn {
+  background: var(--accent); color: #fff; border: none; border-radius: 6px;
+  padding: .4rem .8rem; font-size: .8rem; font-weight: 600; cursor: pointer;
+  transition: background .2s;
+}
+.play-btn:hover { background: #c73a52; }
+.play-btn:disabled { opacity: .5; cursor: not-allowed; }
+.speed-group { display: flex; gap: 0; border-radius: 6px; overflow: hidden; border: 1px solid var(--border); }
+.speed-btn {
+  background: var(--card); color: var(--text2); border: none;
+  padding: .3rem .6rem; font-size: .75rem; cursor: pointer; transition: all .2s;
+}
+.speed-btn.active { background: var(--accent); color: #fff; }
+.speed-btn:hover:not(.active) { background: var(--bg3); }
 /* Song link */
 .song-link {
   display: inline-flex; align-items: center; gap: .4rem;
@@ -416,6 +433,120 @@ const NOTE_NAMES_FLAT = ['E','F','Gb','G','Ab','A','Bb','B','C','Db','D','Eb'];
 const STRING_OFFSETS = [0, 5, 10, 3]; // E=0, A=5, D=10, G=3
 const STRING_NAMES = ['E','A','D','G'];
 
+// ============ AUDIO ENGINE ============
+let audioCtx = null;
+function getAudioCtx() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); return audioCtx; }
+
+// Bass guitar frequencies (E1 = 41.2 Hz)
+const E1_FREQ = 41.204;
+const STRING_SEMITONES = [0, 5, 10, 15]; // semitones above E1: E=0, A=5, D=10, G=15
+
+function noteFreq(stringIdx, fret) {
+  // Calculate frequency from string and fret position
+  let semitones = STRING_SEMITONES[stringIdx] + fret;
+  return E1_FREQ * Math.pow(2, semitones / 12);
+}
+
+function noteFreqByName(noteName) {
+  // For progression playback: find the lowest position for this note on the bass
+  const chromaticFromE = ['E','F','F#','G','G#','A','A#','B','C','C#','D','D#'];
+  const flatNames =      ['E','F','Gb','G','Ab','A','Bb','B','C','Db','D','Eb'];
+  // Search each string for the note, prefer lower strings (deeper tone, more bass-like)
+  for (let s = 0; s < 4; s++) {
+    for (let f = 0; f <= 12; f++) {
+      let idx = (STRING_OFFSETS[s] + f) % 12;
+      if (chromaticFromE[idx] === noteName || flatNames[idx] === noteName) {
+        return noteFreq(s, f);
+      }
+    }
+  }
+  return null;
+}
+
+function playNote(noteName, duration, stringIdx, fret) {
+  duration = duration || 0.8;
+  let ctx = getAudioCtx();
+  let freq = (stringIdx !== undefined && fret !== undefined) ? noteFreq(stringIdx, fret) : noteFreqByName(noteName);
+  if (!freq) return;
+
+  // Main oscillator (triangle for bass-like warmth)
+  let osc = ctx.createOscillator();
+  osc.type = 'triangle';
+  osc.frequency.value = freq;
+
+  // Sub oscillator (sine, one octave down) for depth
+  let sub = ctx.createOscillator();
+  sub.type = 'sine';
+  sub.frequency.value = freq;
+
+  // Gain envelope (quick attack, natural decay)
+  let gain = ctx.createGain();
+  let now = ctx.currentTime;
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.4, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+  let subGain = ctx.createGain();
+  subGain.gain.setValueAtTime(0, now);
+  subGain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+  subGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+  osc.connect(gain);
+  sub.connect(subGain);
+  gain.connect(ctx.destination);
+  subGain.connect(ctx.destination);
+
+  osc.start(now);
+  sub.start(now);
+  osc.stop(now + duration + 0.05);
+  sub.stop(now + duration + 0.05);
+}
+
+let progPlaying = false;
+let progTimeout = null;
+let currentBpm = 70; // default Medium
+
+function setSpeed(bpm, btn) {
+  currentBpm = bpm;
+  document.querySelectorAll('.speed-btn').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+}
+
+function stopProgression() {
+  progPlaying = false;
+  if (progTimeout) clearTimeout(progTimeout);
+  progTimeout = null;
+  document.querySelectorAll('.chord-badge.highlight').forEach(el => el.classList.remove('highlight'));
+  document.querySelectorAll('.play-btn').forEach(b => { b.disabled = false; b.textContent = b.dataset.label || '▶ Play'; });
+}
+
+function playProgression(btnId) {
+  if (progPlaying) { stopProgression(); return; }
+  let btn = document.getElementById(btnId);
+  if (!btn) return;
+  let prog = JSON.parse(btn.dataset.prog);
+  progPlaying = true;
+  btn.dataset.label = btn.textContent; btn.textContent = '■ Stop';
+  document.querySelectorAll('.play-btn').forEach(b => { if (b.id !== btnId) b.disabled = true; });
+
+  let msPerBeat = (60 / currentBpm) * 4 * 1000; // 4 beats per chord
+  let i = 0;
+  let badges = btn.closest('.section-flow').querySelectorAll('.chord-badge');
+
+  function step() {
+    if (!progPlaying || i >= prog.length) { stopProgression(); return; }
+    // Highlight current badge
+    badges.forEach(b => b.classList.remove('highlight'));
+    if (badges[i]) badges[i].classList.add('highlight');
+    // Extract root note from chord name (e.g. "F#7" -> "F#", "Bm" -> "B")
+    let root = prog[i].match(/^[A-G][b#]?/);
+    if (root) playNote(root[0], msPerBeat / 1000 * 0.9);
+    i++;
+    progTimeout = setTimeout(step, msPerBeat);
+  }
+  step();
+}
+
 function noteAt(s, f) { return NOTES[(STRING_OFFSETS[s] + f) % 12]; }
 
 // ============ LEFTY MODE ============
@@ -443,30 +574,37 @@ function fretboard(startFret, endFret, notes, title) {
   if (isLefty) fretCols.reverse();
 
   // Fret numbers row
-  html += '<tr><td class="str-label"></td>';
-  if (startFret === 0) html += '<td class="nut"></td>';
+  html += '<tr>';
+  if (!isLefty) html += '<td class="str-label"></td>';
+  if (startFret === 0 && !isLefty) html += '<td class="nut"></td>';
   for (let f of fretCols) {
     html += '<td class="fret-num">' + f + '</td>';
   }
+  if (startFret === 0 && isLefty) html += '<td class="nut"></td>';
+  if (isLefty) html += '<td class="str-label"></td>';
   html += '</tr>';
 
   // Strings (G at top, E at bottom)
   for (let si = 3; si >= 0; si--) {
     let openNote = startFret === 0 ? notes.find(n => n.s === si && n.f === 0) : null;
-    html += '<tr data-string="' + si + '"><td class="str-label">' + (openNote ? '' : STRING_NAMES[si]) + '</td>';
+    let strLabel = '<td class="str-label">' + (openNote ? '' : STRING_NAMES[si]) + '</td>';
+    let nutCell = '';
     if (startFret === 0) {
-      html += '<td class="nut" style="position:relative">';
+      nutCell = '<td class="nut" style="position:relative">';
       if (openNote) {
         let cls = openNote.c || 'root';
-        html += '<span class="fret-dot open' + (cls !== 'root' ? ' note-style' : '') + '">' + openNote.l + '</span>';
+        nutCell += '<span class="fret-dot open' + (cls !== 'root' ? ' note-style' : '') + '" data-note="' + openNote.l + '" onclick="playNote(\'' + openNote.l + '\',0.8,' + si + ',0)">' + openNote.l + '</span>';
       }
-      html += '</td>';
+      nutCell += '</td>';
     }
+    html += '<tr data-string="' + si + '">';
+    if (!isLefty) { html += strLabel + nutCell; }
+    else { /* nut and label added after fret cells */ }
     for (let f of fretCols) {
       let note = notes.find(n => n.s === si && n.f === f);
       html += '<td class="fret-cell">';
       if (note) {
-        html += '<span class="fret-dot ' + (note.c || 'root') + '">' + note.l + '</span>';
+        html += '<span class="fret-dot ' + (note.c || 'root') + '" data-note="' + note.l + '" onclick="playNote(\'' + note.l + '\',0.8,' + si + ',' + f + ')">' + note.l + '</span>';
       }
       if (si === 0 && [3,5,7,9].includes(f)) {
         html += '<span class="fret-marker"></span>';
@@ -476,11 +614,14 @@ function fretboard(startFret, endFret, notes, title) {
       }
       html += '</td>';
     }
+    if (isLefty) { html += nutCell + strLabel; }
     html += '</tr>';
   }
   html += '</table></div>';
   return html;
 }
+
+let progBtnCounter = 0;
 
 // ============ SONG DATABASE ============
 const SONGS = [
@@ -670,11 +811,19 @@ function songIntro(day, song, extras) {
   // Structure
   let structHtml = '';
   song.structure.forEach(sec => {
+    let btnId = 'prog_' + (progBtnCounter++);
+    let progData = JSON.stringify(sec.prog).replace(/"/g, '&quot;');
     structHtml += '<div class="section-flow"><h4>' + sec.name + '</h4><div class="chord-sequence">';
     sec.prog.forEach(ch => {
       structHtml += '<span class="chord-badge">' + ch + '</span>';
     });
-    structHtml += '</div></div>';
+    structHtml += '</div><div class="play-controls">';
+    structHtml += '<button class="play-btn" id="' + btnId + '" data-prog="' + progData + '" onclick="playProgression(\'' + btnId + '\')">&#9654; Play</button>';
+    structHtml += '<div class="speed-group">';
+    structHtml += '<button class="speed-btn" onclick="setSpeed(45,this)">Slow</button>';
+    structHtml += '<button class="speed-btn active" onclick="setSpeed(70,this)">Medium</button>';
+    structHtml += '<button class="speed-btn" onclick="setSpeed(100,this)">Normal</button>';
+    structHtml += '</div></div></div>';
   });
   sections.push({type:'html', title:'Song Structure (Bass Notes)', body: structHtml});
 
@@ -707,11 +856,19 @@ function songPractice(day, song, extras) {
   // Full play-through
   let structHtml = '<p>Play through the entire song structure. Count yourself in: "1, 2, 3, 4..."</p>';
   song.structure.forEach(sec => {
+    let btnId = 'prog_' + (progBtnCounter++);
+    let progData = JSON.stringify(sec.prog).replace(/"/g, '&quot;');
     structHtml += '<div class="section-flow"><h4>' + sec.name + '</h4><div class="chord-sequence">';
     sec.prog.forEach(ch => {
       structHtml += '<span class="chord-badge">' + ch + '</span>';
     });
-    structHtml += '</div></div>';
+    structHtml += '</div><div class="play-controls">';
+    structHtml += '<button class="play-btn" id="' + btnId + '" data-prog="' + progData + '" onclick="playProgression(\'' + btnId + '\')">&#9654; Play</button>';
+    structHtml += '<div class="speed-group">';
+    structHtml += '<button class="speed-btn" onclick="setSpeed(45,this)">Slow</button>';
+    structHtml += '<button class="speed-btn active" onclick="setSpeed(70,this)">Medium</button>';
+    structHtml += '<button class="speed-btn" onclick="setSpeed(100,this)">Normal</button>';
+    structHtml += '</div></div></div>';
   });
   sections.push({type:'html', title:'Full Play-Through', body: structHtml});
 
@@ -1294,6 +1451,8 @@ function renderDashboard() {
 }
 
 function renderLesson(day) {
+  stopProgression();
+  progBtnCounter = 0;
   const lesson = LESSONS.find(l => l.day === day);
   if (!lesson) { location.hash = '#dashboard'; return; }
   const phase = getPhase(day);
