@@ -377,6 +377,51 @@ tr[data-string="3"] .fret-cell { background: linear-gradient(180deg, transparent
   border-radius: 5px; transition: all .2s;
 }
 .song-dl-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* Print button */
+.print-btn {
+  background: none; border: 1px solid var(--border); color: var(--text2);
+  padding: .4rem .8rem; border-radius: 6px; font-size: .8rem; cursor: pointer;
+  transition: all .2s; display: inline-flex; align-items: center; gap: .3rem;
+}
+.print-btn:hover { border-color: var(--accent); color: var(--accent); }
+/* Print stylesheet */
+@media print {
+  * { color: #000 !important; background: #fff !important; box-shadow: none !important; text-shadow: none !important; }
+  body { margin: 0; padding: 0; font-size: 11pt; }
+  #sidebar, .print-btn, .play-controls, .gdrive-player, .song-dl-btn,
+  .lesson-controls, .lesson-nav, .hand-selector, #login-gate { display: none !important; }
+  #content { margin: 0 !important; padding: 0 !important; max-width: 100% !important; }
+  .lesson-header { border-bottom: 2px solid #000; padding-bottom: .3rem; margin-bottom: .5rem; }
+  .lesson-title { font-size: 16pt !important; }
+  .lesson-phase { font-size: 9pt !important; }
+  .lesson-section { page-break-inside: avoid; margin: .6rem 0; padding: .5rem 0; border-bottom: 1px solid #ccc; }
+  .lesson-objectives { border: 1px solid #999 !important; padding: .5rem !important; margin-bottom: .5rem; }
+  .fretboard-container { page-break-inside: avoid; }
+  .fretboard { border: 1px solid #999 !important; }
+  .fretboard .fret-cell { border-color: #999 !important; background: linear-gradient(180deg, transparent 46%, #666 46%, #666 54%, transparent 54%) !important; }
+  .fretboard tr[data-string="0"] .fret-cell { background: linear-gradient(180deg, transparent 40%, #555 40%, #555 60%, transparent 60%) !important; }
+  .fretboard tr[data-string="1"] .fret-cell { background: linear-gradient(180deg, transparent 43%, #666 43%, #666 57%, transparent 57%) !important; }
+  .fretboard tr[data-string="2"] .fret-cell { background: linear-gradient(180deg, transparent 45.5%, #777 45.5%, #777 54.5%, transparent 54.5%) !important; }
+  .fretboard tr[data-string="3"] .fret-cell { background: linear-gradient(180deg, transparent 47.5%, #888 47.5%, #888 52.5%, transparent 52.5%) !important; }
+  .fretboard .nut { background: #999 !important; }
+  .fret-dot { border: 2px solid #000 !important; }
+  .fret-dot.root { background: #000 !important; color: #fff !important; }
+  .fret-dot.note { background: #666 !important; color: #fff !important; }
+  .fret-dot.open { background: transparent !important; border: 2px solid #000 !important; color: #000 !important; }
+  .chord-badge { border: 1px solid #999 !important; padding: .2rem .4rem; }
+  .chord-badge.highlight { background: #fff !important; }
+  .section-flow { border: 1px solid #ccc !important; padding: .5rem !important; }
+  .exercise-box { border: 1px solid #000 !important; padding: .5rem !important; }
+  .tip-box { border-left: 3px solid #000 !important; padding: .3rem .5rem !important; font-style: italic; }
+  .test-container { page-break-inside: avoid; }
+  .song-link { color: #000 !important; border: none !important; padding: 0 !important; text-decoration: underline !important; }
+  .song-link::after { content: " (" attr(href) ")"; font-size: 8pt; font-weight: normal; }
+  .song-player { border: none !important; padding: 0 !important; }
+  .song-player-links { margin-top: .3rem; }
+  .info-box { border: 1px solid #999 !important; padding: .5rem !important; }
+  .capo-box { border: 1px solid #999 !important; padding: .5rem !important; }
+  a { color: #000 !important; }
+}
 </style>
 </head>
 <body>
@@ -1586,7 +1631,7 @@ function renderLesson(day) {
   const status = getStatus(day);
 
   let html = '<div class="lesson-header">';
-  html += '<div class="lesson-phase">' + (phase ? phase.name : '') + '</div>';
+  html += '<div class="lesson-phase">' + (phase ? phase.name : '') + '<button class="print-btn" onclick="window.print()" style="float:right">&#128438; Print worksheet</button></div>';
   html += '<h1 class="lesson-title">Day ' + day + ': ' + lesson.title + '</h1>';
   html += '</div>';
 
