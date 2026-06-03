@@ -819,8 +819,8 @@ const SONGS = [
 
 // ============ PHASES ============
 const PHASES = [
-  { name: "Bass Foundations", range: [1,9], color: "#3498db" },
-  { name: "First Songs", range: [10,21], color: "#2ecc71" },
+  { name: "Bass Foundations", range: [1,10], color: "#3498db" },
+  { name: "First Songs", range: [11,21], color: "#2ecc71" },
   { name: "Building Repertoire", range: [22,37], color: "#f39c12" },
   { name: "Capo Songs", range: [38,55], color: "#e94560" },
   { name: "Final Songs & Full Set", range: [56,65], color: "#533483" },
@@ -1047,8 +1047,15 @@ sections:[
   {type:'tip', body:"When switching strings, keep your fretting hand relaxed. Let your fingers hover close to the strings so they're ready to press down quickly."},
 ]});
 
-// ===== DAY 4 =====
-LESSONS.push({ day:4, title:"The D & G Strings", objectives:["Learn notes on the D string (frets 0–5)","Learn notes on the G string (frets 0–5)","Find any note in the first 5 frets"],
+// ===== DAY 4: YOUR FIRST SONG! =====
+LESSONS.push({ day:4, title:"Your First Song: Oh Happy Days!", objectives:["Play a real song with just two notes","Experience playing along with the band","Celebrate — you're a bass player!"],
+sections: songIntro(4, SONGS[0], [
+  {type:'html', title:'Why This Song First?', body:'<p>Oh Happy Days uses just <strong>two notes: G and C</strong>. Both are on fret 3 — G on the E string and C on the A string. You learned these positions on Days 2 and 3!</p><p>This means you can already play a real song from the setlist. Everything in the rest of this course builds on this same idea: find the root notes, play them in time.</p>'},
+  {type:'tip', body:"Don't worry about being perfect. Just get the right notes in roughly the right places. You'll have plenty of time to polish this song later. The important thing is: you're playing a real song on Day 4!"},
+])});
+
+// ===== DAY 5 =====
+LESSONS.push({ day:5, title:"The D & G Strings", objectives:["Learn notes on the D string (frets 0–5)","Learn notes on the G string (frets 0–5)","Find any note in the first 5 frets"],
 sections:[
   {type:'fretboard', title:'D String: Frets 0–5', startFret:0, endFret:5,
     notes:[{s:2,f:0,l:'D',c:'root'},{s:2,f:1,l:'Eb',c:'note'},{s:2,f:2,l:'E',c:'note'},{s:2,f:3,l:'F',c:'note'},{s:2,f:4,l:'F#',c:'note'},{s:2,f:5,l:'G',c:'note'}]},
@@ -1067,7 +1074,7 @@ sections:[
 ]});
 
 // ===== DAY 5 =====
-LESSONS.push({ day:5, title:"Root Notes — The Bass Player's Job", objectives:["Understand what a root note is","Know why root notes are essential for bass","Play root notes for major chords: E, A, D, G, C, F"],
+LESSONS.push({ day:6, title:"Root Notes — The Bass Player's Job", objectives:["Understand what a root note is","Know why root notes are essential for bass","Play root notes for major chords: E, A, D, G, C, F"],
 sections:[
   {type:'html', title:'What Is A Root Note?', body:'<p>A <strong>root note</strong> is the note that gives a chord its name. When Sean plays a "G chord" on guitar, the root note is <strong>G</strong>. When Eugene plays an "Am chord," the root is <strong>A</strong>.</p><p>As a bass player, your #1 job is to <strong>play the root note</strong> of whatever chord the guitarists are playing. You are the foundation that holds everything together.</p><p>For every chord in every song, you just need to find and play one note — the root. That\'s it. This is why bass is a great instrument to start with!</p>'},
   {type:'html', title:'Chord Names = Root Notes', body:'<p>The chord name tells you exactly what note to play:</p><table><tr><th>Chord</th><th>You Play</th></tr><tr><td>G major, Gm, G7, Gsus4</td><td><strong>G</strong></td></tr><tr><td>C major, Cm, C7, CMaj7</td><td><strong>C</strong></td></tr><tr><td>Am, A major, A7</td><td><strong>A</strong></td></tr><tr><td>E major, Em, E7</td><td><strong>E</strong></td></tr><tr><td>D major, Dm, D7</td><td><strong>D</strong></td></tr><tr><td>F major, Fm, FMaj7</td><td><strong>F</strong></td></tr></table><p>See the pattern? Ignore everything after the letter. <strong>The first letter is your note.</strong></p>'},
@@ -1078,7 +1085,7 @@ sections:[
 ]});
 
 // ===== DAY 6 =====
-LESSONS.push({ day:6, title:"More Root Notes — B, F#, C#, Bb", objectives:["Find B, F#, C# on the fretboard","Understand how sharps and flats work as root notes","Know the position of every root note you'll need"],
+LESSONS.push({ day:7, title:"More Root Notes — B, F#, C#, Bb", objectives:["Find B, F#, C# on the fretboard","Understand how sharps and flats work as root notes","Know the position of every root note you'll need"],
 sections:[
   {type:'html', title:'Expanding Your Root Note Map', body:'<p>Yesterday you learned the 6 most common root notes. Today we add the less common ones you\'ll need for the songbook:</p><table><tr><th>Note</th><th>Where</th><th>Songs That Use It</th></tr><tr><td>B</td><td>A string, fret 2</td><td>So Much Faster Now, several capo songs</td></tr><tr><td>F#</td><td>E string, fret 2</td><td>The Only Way Out, capo songs</td></tr><tr><td>C#</td><td>A string, fret 4</td><td>The Only Way Out</td></tr><tr><td>Bb</td><td>A string, fret 1</td><td>My Only Son (capo transposition)</td></tr><tr><td>Ab</td><td>E string, fret 4</td><td>My Only Son, And There You Are</td></tr><tr><td>Eb</td><td>D string, fret 1</td><td>My Only Son</td></tr></table>'},
   {type:'fretboard', title:'All Root Notes You\'ll Ever Need', startFret:0, endFret:5,
@@ -1093,7 +1100,7 @@ sections:[
 ]});
 
 // ===== DAY 7 =====
-LESSONS.push({ day:7, title:"Rhythm Basics — Whole, Half & Quarter Notes", objectives:["Understand beats and bars","Play whole notes (4 beats), half notes (2 beats) and quarter notes (1 beat)","Count out loud while playing"],
+LESSONS.push({ day:8, title:"Rhythm Basics — Whole, Half & Quarter Notes", objectives:["Understand beats and bars","Play whole notes (4 beats), half notes (2 beats) and quarter notes (1 beat)","Count out loud while playing"],
 sections:[
   {type:'html', title:'Beats And Bars', body:'<p>Music is organized into <strong>bars</strong> (also called measures). Most songs have <strong>4 beats per bar</strong>. You count: "1, 2, 3, 4, 1, 2, 3, 4..."</p><p>Think of it like marching: LEFT-right-LEFT-right. Beat 1 is always the strongest.</p>'},
   {type:'html', title:'Note Values', body:'<table><tr><th>Note Type</th><th>Duration</th><th>Per Bar</th><th>Counting</th></tr><tr><td><strong>Whole Note</strong></td><td>4 beats</td><td>1</td><td>Play on 1, hold through 2, 3, 4</td></tr><tr><td><strong>Half Note</strong></td><td>2 beats</td><td>2</td><td>Play on 1 hold 2, play on 3 hold 4</td></tr><tr><td><strong>Quarter Note</strong></td><td>1 beat</td><td>4</td><td>Play on 1, 2, 3, 4</td></tr></table>'},
@@ -1105,7 +1112,7 @@ sections:[
 ]});
 
 // ===== DAY 8 =====
-LESSONS.push({ day:8, title:"Eighth Notes & Rests", objectives:["Play eighth notes (half a beat each)","Understand rests (silence)","Combine different note values"],
+LESSONS.push({ day:9, title:"Eighth Notes & Rests", objectives:["Play eighth notes (half a beat each)","Understand rests (silence)","Combine different note values"],
 sections:[
   {type:'html', title:'Eighth Notes', body:'<p><strong>Eighth notes</strong> are twice as fast as quarter notes. You fit 8 in a bar. Count them:</p><p>"<strong>1</strong>-and-<strong>2</strong>-and-<strong>3</strong>-and-<strong>4</strong>-and"</p><p>The numbers are <strong>downbeats</strong> and the "ands" are <strong>upbeats</strong>. Pluck on every number AND every "and."</p>'},
   {type:'exercise', title:'Exercise: Eighth Notes on E', body:'<p>Play E (open E string) as eighth notes:</p><p>"<strong>E</strong>-and-<strong>E</strong>-and-<strong>E</strong>-and-<strong>E</strong>-and"</p><p>That\'s 8 plucks per bar. Alternate your index and middle fingers. Keep it even and slow at first. Do 4 bars.</p>'},
@@ -1116,7 +1123,7 @@ sections:[
 ]});
 
 // ===== DAY 9: TEST 1 =====
-LESSONS.push({ day:9, title:"TEST 1 — Foundations Check", objectives:["Test your note knowledge","Test your fretboard navigation","Review everything from Days 1–8"], isTest:true,
+LESSONS.push({ day:10, title:"TEST 1 — Foundations Check", objectives:["Test your note knowledge","Test your fretboard navigation","Review everything from Days 1–9"], isTest:true,
 sections:[
   {type:'html', title:'Test Time!', body:'<p>Let\'s check how you\'re doing. Answer each question, then check your answers. Don\'t worry about getting everything perfect — this is just to identify what you might want to review.</p>'},
   {type:'test', questions:[
@@ -1134,14 +1141,11 @@ sections:[
   {type:'exercise', title:'Practical Test', body:'<p>Play the following note sequence from memory (don\'t look at any diagrams!):</p><ol><li>G (E string, fret 3) — 4 quarter notes</li><li>C (A string, fret 3) — 4 quarter notes</li><li>D (D string, open) — 4 quarter notes</li><li>E (E string, open) — 4 quarter notes</li><li>F (E string, fret 1) — 4 quarter notes</li><li>A (A string, open) — 4 quarter notes</li></ol><p>If you can do this smoothly, you\'re ready for songs!</p>'},
 ]});
 
-// ===== DAYS 10-11: Oh Happy Days =====
-LESSONS.push({ day:10, title:"Song: Oh Happy Days — Learn", objectives:["Learn the bass notes for Oh Happy Days","Play through the verse and chorus","Your first complete song!"],
-sections: songIntro(10, SONGS[0], [
-  {type:'tip', body:"This is the simplest song in the book — just two notes! G and C. Both are on fret 3 (E and A strings). Your fingers barely have to move."},
+// ===== DAY 11: Oh Happy Days — Review & Polish =====
+LESSONS.push({ day:11, title:"Song: Oh Happy Days — Review & Polish", objectives:["Revisit Oh Happy Days with your new rhythm skills","Play with confidence and solid timing"],
+sections: songPractice(11, SONGS[0], [
+  {type:'tip', body:"You first played this song back on Day 4! Now that you know about beats, bars, and counting, try playing it with much better timing. Count '1, 2, 3, 4' out loud through every bar."},
 ])});
-
-LESSONS.push({ day:11, title:"Song: Oh Happy Days — Practice", objectives:["Play Oh Happy Days smoothly","Work on timing and transitions"],
-sections: songPractice(11, SONGS[0])});
 
 // ===== DAYS 12-13: Please Come Home =====
 LESSONS.push({ day:12, title:"Song: Please Come Home — Learn", objectives:["Learn the bass notes for Please Come Home","Navigate between C, F, and G"],
