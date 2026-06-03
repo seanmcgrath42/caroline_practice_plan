@@ -463,43 +463,165 @@ function noteFreqByName(noteName) {
   return null;
 }
 
+// ============ SAMPLED BASS (Option 2 demo) ============
+const sampleCache = {};
+const SAMPLE_BASE = 'https://gleitz.github.io/midi-js-soundfonts/FatBoy/electric_bass_finger-mp3/';
+
+function noteMidiName(stringIdx, fret) {
+  // Convert string/fret to MIDI note name (e.g. E1, A1, D2, G2)
+  const noteNames = ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];
+  // E string open = E1 (MIDI 28), octave starts at C
+  let midi = 28 + STRING_SEMITONES[stringIdx] + fret;
+  let octave = Math.floor(midi / 12) - 1;
+  let noteIdx = midi % 12;
+  return noteNames[noteIdx] + octave;
+}
+
+function noteMidiNameByNoteName(noteName) {
+  // Find lowest position for this note name and return MIDI name
+  const chromaticFromE = ['E','F','F#','G','G#','A','A#','B','C','C#','D','D#'];
+  const flatNames =      ['E','F','Gb','G','Ab','A','Bb','B','C','Db','D','Eb'];
+  for (let s = 0; s < 4; s++) {
+    for (let f = 0; f <= 12; f++) {
+      let idx = (STRING_OFFSETS[s] + f) % 12;
+      if (chromaticFromE[idx] === noteName || flatNames[idx] === noteName) {
+        return noteMidiName(s, f);
+      }
+    }
+  }
+  return null;
+}
+
+function loadSample(midiName) {
+  if (sampleCache[midiName]) return Promise.resolve(sampleCache[midiName]);
+  let ctx = getAudioCtx();
+  return fetch(SAMPLE_BASE + midiName + '.mp3')
+    .then(r => r.arrayBuffer())
+    .then(buf => ctx.decodeAudioData(buf))
+    .then(decoded => { sampleCache[midiName] = decoded; return decoded; })
+    .catch(() => null);
+}
+
+function playNoteSampled(noteName, duration, stringIdx, fret) {
+  let ctx = getAudioCtx();
+  let midiName = (stringIdx !== undefined && fret !== undefined) ? noteMidiName(stringIdx, fret) : noteMidiNameByNoteName(noteName);
+  if (!midiName) return;
+  loadSample(midiName).then(buf => {
+    if (!buf) { playNoteSynth(noteName, duration, stringIdx, fret); return; }
+    let src = ctx.createBufferSource();
+    src.buffer = buf;
+    let gain = ctx.createGain();
+    gain.gain.value = 1.0;
+    let dur = duration || 0.8;
+    let now = ctx.currentTime;
+    gain.gain.setValueAtTime(1.0, now);
+    gain.gain.setValueAtTime(1.0, now + dur * 0.7);
+    gain.gain.exponentialRampToValueAtTime(0.01, now + dur);
+    src.connect(gain);
+    gain.connect(ctx.destination);
+    src.start(now);
+    src.stop(now + dur + 0.05);
+  });
+}
+
 function playNote(noteName, duration, stringIdx, fret) {
+  return playNoteSampled(noteName, duration, stringIdx, fret);
+}
+
+// Synth fallback (used if samples fail to load)
+function playNoteSynth(noteName, duration, stringIdx, fret) {
   duration = duration || 0.8;
   let ctx = getAudioCtx();
   let freq = (stringIdx !== undefined && fret !== undefined) ? noteFreq(stringIdx, fret) : noteFreqByName(noteName);
   if (!freq) return;
-
-  // Main oscillator (triangle for bass-like warmth)
-  let osc = ctx.createOscillator();
-  osc.type = 'triangle';
-  osc.frequency.value = freq;
-
-  // Sub oscillator (sine, one octave down) for depth
-  let sub = ctx.createOscillator();
-  sub.type = 'sine';
-  sub.frequency.value = freq;
-
-  // Gain envelope (quick attack, natural decay)
-  let gain = ctx.createGain();
   let now = ctx.currentTime;
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.4, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
 
-  let subGain = ctx.createGain();
-  subGain.gain.setValueAtTime(0, now);
-  subGain.gain.linearRampToValueAtTime(0.2, now + 0.02);
-  subGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+  // Master gain + compressor for clean output
+  let master = ctx.createGain();
+  master.gain.value = 0.7;
+  let comp = ctx.createDynamicsCompressor();
+  comp.threshold.value = -20;
+  comp.ratio.value = 4;
+  master.connect(comp);
+  comp.connect(ctx.destination);
 
-  osc.connect(gain);
-  sub.connect(subGain);
-  gain.connect(ctx.destination);
-  subGain.connect(ctx.destination);
+  // Low-pass filter (simulates bass guitar body/cab warmth)
+  let filter = ctx.createBiquadFilter();
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(freq * 6, now);
+  filter.frequency.exponentialRampToValueAtTime(freq * 2, now + 0.15);
+  filter.Q.value = 1.5;
+  filter.connect(master);
 
-  osc.start(now);
-  sub.start(now);
-  osc.stop(now + duration + 0.05);
-  sub.stop(now + duration + 0.05);
+  // Fundamental (triangle wave — warm, round)
+  let osc1 = ctx.createOscillator();
+  osc1.type = 'triangle';
+  osc1.frequency.value = freq;
+  let g1 = ctx.createGain();
+  g1.gain.setValueAtTime(0, now);
+  g1.gain.linearRampToValueAtTime(0.5, now + 0.008);
+  g1.gain.setValueAtTime(0.5, now + 0.01);
+  g1.gain.exponentialRampToValueAtTime(0.25, now + 0.15);
+  g1.gain.exponentialRampToValueAtTime(0.01, now + duration);
+  osc1.connect(g1);
+  g1.connect(filter);
+
+  // Sub-fundamental (sine, same octave — adds body)
+  let osc2 = ctx.createOscillator();
+  osc2.type = 'sine';
+  osc2.frequency.value = freq;
+  let g2 = ctx.createGain();
+  g2.gain.setValueAtTime(0, now);
+  g2.gain.linearRampToValueAtTime(0.35, now + 0.005);
+  g2.gain.exponentialRampToValueAtTime(0.15, now + 0.2);
+  g2.gain.exponentialRampToValueAtTime(0.01, now + duration);
+  osc2.connect(g2);
+  g2.connect(filter);
+
+  // Second harmonic (sine at 2x freq — adds string character)
+  let osc3 = ctx.createOscillator();
+  osc3.type = 'sine';
+  osc3.frequency.value = freq * 2;
+  let g3 = ctx.createGain();
+  g3.gain.setValueAtTime(0, now);
+  g3.gain.linearRampToValueAtTime(0.12, now + 0.005);
+  g3.gain.exponentialRampToValueAtTime(0.01, now + duration * 0.4);
+  osc3.connect(g3);
+  g3.connect(filter);
+
+  // Third harmonic (sine at 3x — adds pluck brightness, dies fast)
+  let osc4 = ctx.createOscillator();
+  osc4.type = 'sine';
+  osc4.frequency.value = freq * 3;
+  let g4 = ctx.createGain();
+  g4.gain.setValueAtTime(0, now);
+  g4.gain.linearRampToValueAtTime(0.06, now + 0.003);
+  g4.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+  osc4.connect(g4);
+  g4.connect(filter);
+
+  // Noise burst for pick/pluck attack
+  let noiseLen = 0.04;
+  let noiseBuf = ctx.createBuffer(1, ctx.sampleRate * noiseLen, ctx.sampleRate);
+  let noiseData = noiseBuf.getChannelData(0);
+  for (let i = 0; i < noiseData.length; i++) noiseData[i] = (Math.random() * 2 - 1) * 0.3;
+  let noise = ctx.createBufferSource();
+  noise.buffer = noiseBuf;
+  let noiseFilter = ctx.createBiquadFilter();
+  noiseFilter.type = 'bandpass';
+  noiseFilter.frequency.value = freq * 4;
+  noiseFilter.Q.value = 2;
+  let noiseGain = ctx.createGain();
+  noiseGain.gain.setValueAtTime(0.15, now);
+  noiseGain.gain.exponentialRampToValueAtTime(0.001, now + noiseLen);
+  noise.connect(noiseFilter);
+  noiseFilter.connect(noiseGain);
+  noiseGain.connect(master);
+
+  // Start all
+  osc1.start(now); osc2.start(now); osc3.start(now); osc4.start(now); noise.start(now);
+  let end = now + duration + 0.05;
+  osc1.stop(end); osc2.stop(end); osc3.stop(end); osc4.stop(end);
 }
 
 let progPlaying = false;
