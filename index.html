@@ -403,11 +403,12 @@ tr[data-string="3"] .fret-cell { background: linear-gradient(180deg, transparent
   .fretboard tr[data-string="1"] .fret-cell { background: linear-gradient(180deg, transparent 43%, #666 43%, #666 57%, transparent 57%) !important; }
   .fretboard tr[data-string="2"] .fret-cell { background: linear-gradient(180deg, transparent 45.5%, #777 45.5%, #777 54.5%, transparent 54.5%) !important; }
   .fretboard tr[data-string="3"] .fret-cell { background: linear-gradient(180deg, transparent 47.5%, #888 47.5%, #888 52.5%, transparent 52.5%) !important; }
-  .fretboard .nut { background: #999 !important; width: 30px !important; }
+  .fretboard .str-label { width: 0 !important; padding: 0 !important; overflow: visible; }
+  .fretboard .nut { background: #999 !important; width: 36px !important; min-width: 36px !important; }
   .fret-dot { border: 2px solid #000 !important; }
   .fret-dot.root { background: #000 !important; color: #fff !important; }
   .fret-dot.note { background: #666 !important; color: #fff !important; }
-  .fret-dot.open { background: transparent !important; border: 2px solid #000 !important; color: #000 !important; left: 50% !important; transform: translate(-50%, -50%) !important; }
+  .fret-dot.open { background: #fff !important; border: 2px solid #000 !important; color: #000 !important; position: absolute !important; left: 50% !important; top: 50% !important; transform: translate(-50%, -50%) !important; z-index: 3; }
   .chord-badge { border: 1px solid #999 !important; padding: .2rem .4rem; }
   .chord-badge.highlight { background: #fff !important; }
   .section-flow { border: 1px solid #ccc !important; padding: .5rem !important; }
